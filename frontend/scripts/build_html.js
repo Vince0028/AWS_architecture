@@ -135,7 +135,7 @@ const iconMapStr = JSON.stringify(pipelineIconMap).replace(/\\/g, '\\\\').replac
 // ============================================================
 const htmlCode = '<!DOCTYPE html>\n<html lang="en">\n<head>\n' +
 '    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
-'    <title>AWS Console - Vibe-to-Cloud Playbook</title>\n    <script src="https://cdn.tailwindcss.com"></script>\n' +
+'    <title>AWS Console - Vibe-to-Cloud Playbook</title>\n    <link rel="icon" type="image/jpeg" href="images/AWSCC_APC_LOGO.jpg">\n    <script src="https://cdn.tailwindcss.com"></script>\n' +
 '    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>\n' +
 '    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>\n' +
 '    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>\n' +
@@ -475,9 +475,7 @@ const htmlCode = '<!DOCTYPE html>\n<html lang="en">\n<head>\n' +
 '            return (\n' +
 '                <div className="min-h-screen flex flex-col w-full">\n' +
 '                    <header className="aws-header w-full border-b border-[#161e2d]">\n' +
-'                        <svg width="30" height="18" viewBox="0 0 36 22" fill="none" className="mr-4">\n' +
-'                            <path d="M18 0L36 22H0L18 0Z" fill="white"/>\n' +
-'                        </svg>\n' +
+'                        <img src="images/AWSCC_APC_LOGO.jpg" style={{width:32,height:32,borderRadius:4,objectFit:"contain"}} className="mr-3" />\n' +
 '                        <span className="font-bold text-lg tracking-tight">AWS Management Architecture</span>\n' +
 '                        <span className="ml-auto text-sm text-gray-400">{ALL_TOOLS.length} services</span>\n' +
 '                    </header>\n' +
