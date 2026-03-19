@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { User, Users, Folder, FileText } from 'lucide-react';
 
 export const ToolSidebar = ({ allTools }) => {
     const [search, setSearch] = useState("");
@@ -116,6 +117,52 @@ export const ToolSidebar = ({ allTools }) => {
             
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 
+                <div style={{ marginBottom: '16px' }}>
+                    <h4 style={{ fontSize: '11px', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0' }}>Structural Shapes</h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                        <div 
+                            draggable 
+                            onDragStart={(e) => { e.dataTransfer.setData('application/reactflow', JSON.stringify({ type: 'shapeNode', shapeType: 'user' })); e.dataTransfer.effectAllowed = 'move'; }} 
+                            style={{ border: '1px solid #d1d5db', borderRadius: '6px', backgroundColor: 'white', padding: '12px 8px', cursor: 'grab', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', boxSizing: 'border-box', color: '#4b5563', transition: 'all 0.15s ease' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.backgroundColor = '#eff6ff'; e.currentTarget.style.color = '#1d4ed8'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#d1d5db'; e.currentTarget.style.backgroundColor = 'white'; e.currentTarget.style.color = '#4b5563'; }}
+                        >
+                            <User size={24} strokeWidth={1.5} color="currentColor" />
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: 'inherit', textAlign: 'center' }}>User / Actor</span>
+                        </div>
+                        <div 
+                            draggable 
+                            onDragStart={(e) => { e.dataTransfer.setData('application/reactflow', JSON.stringify({ type: 'shapeNode', shapeType: 'users' })); e.dataTransfer.effectAllowed = 'move'; }} 
+                            style={{ border: '1px solid #d1d5db', borderRadius: '6px', backgroundColor: 'white', padding: '12px 8px', cursor: 'grab', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', boxSizing: 'border-box', color: '#4b5563', transition: 'all 0.15s ease' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.backgroundColor = '#eff6ff'; e.currentTarget.style.color = '#1d4ed8'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#d1d5db'; e.currentTarget.style.backgroundColor = 'white'; e.currentTarget.style.color = '#4b5563'; }}
+                        >
+                            <Users size={24} strokeWidth={1.5} color="currentColor" />
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: 'inherit', textAlign: 'center' }}>User Group</span>
+                        </div>
+                        <div 
+                            draggable 
+                            onDragStart={(e) => { e.dataTransfer.setData('application/reactflow', JSON.stringify({ type: 'shapeNode', shapeType: 'folder' })); e.dataTransfer.effectAllowed = 'move'; }} 
+                            style={{ border: '1px solid #d1d5db', borderRadius: '6px', backgroundColor: 'white', padding: '12px 8px', cursor: 'grab', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', boxSizing: 'border-box', color: '#4b5563', transition: 'all 0.15s ease' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.backgroundColor = '#eff6ff'; e.currentTarget.style.color = '#1d4ed8'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#d1d5db'; e.currentTarget.style.backgroundColor = 'white'; e.currentTarget.style.color = '#4b5563'; }}
+                        >
+                            <Folder size={24} strokeWidth={1.5} color="currentColor" />
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: 'inherit', textAlign: 'center' }}>Group Folder</span>
+                        </div>
+                        <div 
+                            draggable 
+                            onDragStart={(e) => { e.dataTransfer.setData('application/reactflow', JSON.stringify({ type: 'shapeNode', shapeType: 'document' })); e.dataTransfer.effectAllowed = 'move'; }} 
+                            style={{ border: '1px solid #d1d5db', borderRadius: '6px', backgroundColor: 'white', padding: '12px 8px', cursor: 'grab', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', boxSizing: 'border-box', color: '#4b5563', transition: 'all 0.15s ease' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.backgroundColor = '#eff6ff'; e.currentTarget.style.color = '#1d4ed8'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#d1d5db'; e.currentTarget.style.backgroundColor = 'white'; e.currentTarget.style.color = '#4b5563'; }}
+                        >
+                            <FileText size={24} strokeWidth={1.5} color="currentColor" />
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: 'inherit', textAlign: 'center' }}>Document / Note</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div>
                     <h4 style={{ fontSize: '11px', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0' }}>Boundaries</h4>
                     

@@ -11,6 +11,7 @@ export function EditableEdge({
   targetPosition,
   style = {},
   markerEnd,
+  markerStart,
   data = {},
   selected
 }) {
@@ -103,7 +104,7 @@ export function EditableEdge({
 
   return (
     <>
-      <BaseEdge id={id} path={edgePath} markerEnd={markerEnd} style={combinedStyle} />
+      <BaseEdge id={id} path={edgePath} markerEnd={markerEnd} markerStart={markerStart} style={combinedStyle} />
       {/* Invisible thick path perfectly mirrors edge dimensions to catch user clicks comfortably */}
       <path id={`${id}-interactive`} stroke="transparent" strokeWidth={15} fill="none" d={edgePath} className="react-flow__edge-interaction cursor-pointer" />
       

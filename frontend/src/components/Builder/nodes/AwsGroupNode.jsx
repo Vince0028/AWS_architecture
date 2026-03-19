@@ -42,7 +42,8 @@ export const AwsGroupNode = ({ data, selected }) => {
     const isSolid = fillStyle === 'solid';
     const isDashed = borderStyle === 'dashed';
 
-    const IconData = ICON_MAP[iconName] || ICON_MAP['box'];
+    const isPathIcon = iconName.includes('.') || iconName.includes('/');
+    const IconData = isPathIcon ? null : (ICON_MAP[iconName] || ICON_MAP['box']);
 
     // Outer Container Inline Styles
     const containerStyles = {
@@ -72,7 +73,11 @@ export const AwsGroupNode = ({ data, selected }) => {
             {isSolid ? (
                 // Solid Fill Style (Subnet style: simple inner text with icon, no outer tab box)
                 <div className="absolute top-0 left-0 p-2 flex items-center gap-1.5 pointer-events-none w-full">
-                    {iconName !== 'none' && <IconData size={14} color={theme.main} strokeWidth={2.5} />}
+                    {iconName !== 'none' && (
+                        isPathIcon ? 
+                        <img src={"/" + iconName} style={{ width: 14, height: 14, objectFit: 'contain' }} alt="Group Icon" /> : 
+                        <IconData size={14} color={theme.main} strokeWidth={2.5} />
+                    )}
                     <span style={{ color: '#16191f' }} className={`text-xs font-bold font-sans tracking-wide`}>
                         {label}
                     </span>
@@ -91,11 +96,15 @@ export const AwsGroupNode = ({ data, selected }) => {
                     }} 
                 >
                     {/* Icon Square */}
-                    <div style={{ backgroundColor: theme.main, display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', height: '32px', width: '32px', flexShrink: 0 }}>
-                        {iconName !== 'none' && <IconData size={18} color="#ffffff" strokeWidth={2} />}
+                    <div style={{ backgroundColor: isPathIcon ? '#ffffff' : theme.main, display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', height: '32px', width: '32px', flexShrink: 0, border: isPathIcon ? `1px solid ${theme.main}` : 'none' }}>
+                        {iconName !== 'none' && (
+                            isPathIcon ? 
+                            <img src={"/" + iconName} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt="Group Icon" /> : 
+                            <IconData size={18} color="#ffffff" strokeWidth={2} />
+                        )}
                     </div>
                     {/* Label Area (overlapping the border) */}
-                    <div style={{ backgroundColor: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '32px', padding: '0 8px' }}>
+                    <div style={{ backgroundColor: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '32px', padding: '0 8px', borderTop: isPathIcon ? `1px solid ${theme.main}` : 'none', borderRight: isPathIcon ? `1px solid ${theme.main}` : 'none', borderBottom: isPathIcon ? `1px solid ${theme.main}` : 'none' }}>
                         <span style={{ color: '#16191f', lineHeight: 1, fontSize: '13px', fontWeight: 'bold', fontFamily: 'sans-serif', letterSpacing: '0.025em' }}>
                             {label}
                         </span>

@@ -14,11 +14,12 @@ import '@xyflow/react/dist/style.css';
 import { AwsResourceNode } from './nodes/AwsResourceNode';
 import { AwsGroupNode } from './nodes/AwsGroupNode';
 import { StepBubbleNode } from './nodes/StepBubbleNode';
+import { ShapeNode } from './nodes/ShapeNode';
 import { EditableEdge } from './edges/EditableEdge';
 
 import { MousePointer2, Hand, Trash2 } from 'lucide-react';
 
-const nodeTypes = { awsNode: AwsResourceNode, awsGroup: AwsGroupNode, stepBubble: StepBubbleNode };
+const nodeTypes = { awsNode: AwsResourceNode, awsGroup: AwsGroupNode, stepBubble: StepBubbleNode, shapeNode: ShapeNode };
 const edgeTypes = { smoothstep: EditableEdge, editable: EditableEdge };
 
 export const DiagramCanvas = ({ allTools }) => {
@@ -50,22 +51,86 @@ export const DiagramCanvas = ({ allTools }) => {
     }, [nodes, edges]);
     const [mode, setMode] = useState('pointer'); // 'pointer' or 'hand'
 
+    // History Stack
+    const historyRef = useRef([]);
+    const historyIndexRef = useRef(-1);
+    const currentNodes = useRef(nodes);
+    const currentEdges = useRef(edges);
+    
+    React.useEffect(() => { 
+        currentNodes.current = nodes; 
+        currentEdges.current = edges; 
+    }, [nodes, edges]);
+
+    const takeSnapshot = useCallback(() => {
+        const state = { nodes: currentNodes.current, edges: currentEdges.current };
+        const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
+        newHistory.push(JSON.parse(JSON.stringify(state)));
+        if (newHistory.length > 50) newHistory.shift();
+        historyRef.current = newHistory;
+        historyIndexRef.current = newHistory.length - 1;
+    }, []);
+
+    React.useEffect(() => {
+        if (historyRef.current.length === 0 && nodes.length > 0) {
+            takeSnapshot(); // initial paint snapshot
+        }
+    }, [nodes, takeSnapshot]);
+
+    React.useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                e.preventDefault();
+                if (e.shiftKey) { 
+                    if (historyIndexRef.current < historyRef.current.length - 1) {
+                        historyIndexRef.current += 1;
+                        const nextState = historyRef.current[historyIndexRef.current];
+                        setNodes(nextState.nodes);
+                        setEdges(nextState.edges);
+                    }
+                } else { 
+                    if (historyIndexRef.current > 0) {
+                        historyIndexRef.current -= 1;
+                        const prevState = historyRef.current[historyIndexRef.current];
+                        setNodes(prevState.nodes);
+                        setEdges(prevState.edges);
+                    }
+                }
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
     // Context Menus
     const [nodeMenu, setNodeMenu] = useState(null); // { id, x, y, type, data }
     const [edgeMenu, setEdgeMenu] = useState(null); // { id, x, y }
 
-    const onNodesChange = useCallback((changes) => setNodes((nds) => applyNodeChanges(changes, nds)), []);
-    const onEdgesChange = useCallback((changes) => setEdges((eds) => applyEdgeChanges(changes, eds)), []);
-    const onConnect = useCallback((connection) => setEdges((eds) => {
-        const newEdge = {
-            ...connection,
-            id: `edge_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-            type: 'editable',
-            animated: false,
-            style: { strokeWidth: 2, stroke: '#545b64' }
-        };
-        return eds.concat(newEdge);
-    }), []);
+    const onNodesChange = useCallback((changes) => {
+        if (changes.some(c => c.type === 'remove' || c.type === 'add')) takeSnapshot();
+        setNodes((nds) => applyNodeChanges(changes, nds));
+    }, [takeSnapshot]);
+
+    const onEdgesChange = useCallback((changes) => {
+        if (changes.some(c => c.type === 'remove' || c.type === 'add')) takeSnapshot();
+        setEdges((eds) => applyEdgeChanges(changes, eds));
+    }, [takeSnapshot]);
+
+    const onConnect = useCallback((connection) => {
+        takeSnapshot();
+        setEdges((eds) => {
+            const newEdge = {
+                ...connection,
+                id: `edge_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                type: 'editable',
+                animated: false,
+                style: { strokeWidth: 2, stroke: '#545b64' },
+                markerEnd: { type: 'arrowclosed', color: '#545b64' }
+            };
+            return eds.concat(newEdge);
+        });
+    }, [takeSnapshot]);
 
     const onNodeContextMenu = (event, node) => {
         event.preventDefault();
@@ -98,6 +163,32 @@ export const DiagramCanvas = ({ allTools }) => {
         setNodeMenu(null);
     };
 
+    const handleMenuDragStart = (e, menuType) => {
+        if (e.target.tagName === 'BUTTON') return;
+        e.preventDefault();
+        e.stopPropagation();
+        
+        let lastX = e.clientX;
+        let lastY = e.clientY;
+        const setMenu = menuType === 'edge' ? setEdgeMenu : setNodeMenu;
+        
+        const onPointerMove = (moveEvent) => {
+            const dx = moveEvent.clientX - lastX;
+            const dy = moveEvent.clientY - lastY;
+            lastX = moveEvent.clientX;
+            lastY = moveEvent.clientY;
+            setMenu(prev => prev ? { ...prev, x: prev.x + dx, y: prev.y + dy } : null);
+        };
+        
+        const onPointerUp = () => {
+            window.removeEventListener('pointermove', onPointerMove);
+            window.removeEventListener('pointerup', onPointerUp);
+        };
+        
+        window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointerup', onPointerUp);
+    };
+
     const onEdgeClick = (event, edge) => {
         event.stopPropagation();
         const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
@@ -110,6 +201,7 @@ export const DiagramCanvas = ({ allTools }) => {
 
     const updateSelectedEdgeStyle = (dashArray, animated) => {
         if (!edgeMenu) return;
+        takeSnapshot();
         setEdges(eds => eds.map(e => {
             if (e.id === edgeMenu.id) {
                 return { 
@@ -124,16 +216,46 @@ export const DiagramCanvas = ({ allTools }) => {
 
     const updateSelectedEdgeType = (type) => {
         if (!edgeMenu) return;
+        takeSnapshot();
         setEdges(eds => eds.map(e => e.id === edgeMenu.id ? { ...e, type } : e));
     };
 
     const updateSelectedEdgeColor = (hexCode) => {
         if (!edgeMenu) return;
+        takeSnapshot();
         setEdges(eds => eds.map(e => {
             if (e.id === edgeMenu.id) {
                 return { 
                     ...e, 
-                    style: { ...e.style, stroke: hexCode } 
+                    style: { ...e.style, stroke: hexCode },
+                    markerEnd: e.markerEnd ? { ...e.markerEnd, color: hexCode } : undefined,
+                    markerStart: e.markerStart ? { ...e.markerStart, color: hexCode } : undefined
+                };
+            }
+            return e;
+        }));
+    };
+
+    const updateSelectedEdgeArrows = (direction) => {
+        if (!edgeMenu) return;
+        takeSnapshot();
+        setEdges(eds => eds.map(e => {
+            if (e.id === edgeMenu.id) {
+                const color = e.style?.stroke || '#545b64';
+                let newMarkerStart = undefined;
+                let newMarkerEnd = undefined;
+                
+                if (direction === 'forward' || direction === 'both') {
+                    newMarkerEnd = { type: 'arrowclosed', color };
+                }
+                if (direction === 'both' || direction === 'backward') {
+                    newMarkerStart = { type: 'arrowclosed', color };
+                }
+
+                return { 
+                    ...e, 
+                    markerStart: newMarkerStart,
+                    markerEnd: newMarkerEnd
                 };
             }
             return e;
@@ -142,6 +264,7 @@ export const DiagramCanvas = ({ allTools }) => {
 
     const updateSelectedGroupData = (key, value) => {
         if (!nodeMenu) return;
+        takeSnapshot();
         setNodes(nds => nds.map(n => {
             if (n.id === nodeMenu.id) {
                 return { ...n, data: { ...n.data, [key]: value } };
@@ -246,6 +369,8 @@ export const DiagramCanvas = ({ allTools }) => {
                 position.x -= (parentNode.positionAbsolute?.x || parentNode.position.x);
                 position.y -= (parentNode.positionAbsolute?.y || parentNode.position.y);
             }
+            
+            takeSnapshot(); // Record pristine state before dropping new element
 
             if (dropData.type === 'awsNode') {
                 const tool = allTools.find(t => t.id === dropData.toolId);
@@ -283,6 +408,26 @@ export const DiagramCanvas = ({ allTools }) => {
                 };
                 setNodes((nds) => nds.concat(newNode));
             }
+            else if (dropData.type === 'shapeNode') {
+                const shapeMap = {
+                    'user': 'System User',
+                    'users': 'User Group',
+                    'folder': 'Data Folder',
+                    'document': 'Config File'
+                };
+                const newNode = {
+                    id: `shape_${Date.now()}`,
+                    type: 'shapeNode',
+                    position,
+                    data: { 
+                        shapeType: dropData.shapeType, 
+                        label: shapeMap[dropData.shapeType] || 'Label'
+                    },
+                    parentId: parentNodeId,
+                    extent: parentNodeId ? 'parent' : undefined
+                };
+                setNodes((nds) => nds.concat(newNode));
+            }
         },
         [screenToFlowPosition, allTools, getNodes],
     );
@@ -304,6 +449,10 @@ export const DiagramCanvas = ({ allTools }) => {
         }
         return { x: absX, y: absY };
     };
+
+    const onNodeDragStart = useCallback((event, node) => {
+        takeSnapshot();
+    }, [takeSnapshot]);
 
     // Auto-draw Figma Alignment Action Guidelines while actively dragging
     const onNodeDrag = useCallback((event, node) => {
@@ -376,6 +525,7 @@ export const DiagramCanvas = ({ allTools }) => {
                 onConnect={onConnect}
                 onDrop={onDrop}
                 onDragOver={onDragOver}
+                onNodeDragStart={onNodeDragStart}
                 onNodeDrag={onNodeDrag}
                 onNodeDragStop={onNodeDragStop}
                 onNodeContextMenu={onNodeContextMenu}
@@ -483,6 +633,13 @@ export const DiagramCanvas = ({ allTools }) => {
                 const currentDash = selectedEdge.style?.strokeDasharray || 'none';
                 const isAnimated = selectedEdge.animated || false;
 
+                const hasMarkerStart = !!selectedEdge.markerStart;
+                const hasMarkerEnd = !!selectedEdge.markerEnd;
+                let currentDirection = 'none';
+                if (hasMarkerEnd && !hasMarkerStart) currentDirection = 'forward';
+                if (!hasMarkerEnd && hasMarkerStart) currentDirection = 'backward';
+                if (hasMarkerEnd && hasMarkerStart) currentDirection = 'both';
+
                 const getShapeStyle = (typeMatch) => currentType === typeMatch
                     ? { padding: '4px 8px', backgroundColor: '#f0f8ff', border: '1px solid #0073bb', color: '#0073bb', fontSize: '12px', textAlign: 'left', cursor: 'pointer', fontWeight: 500 }
                     : { padding: '4px 8px', backgroundColor: 'white', border: '1px solid #d1d5db', color: 'black', fontSize: '12px', textAlign: 'left', cursor: 'pointer', fontWeight: 500 };
@@ -491,13 +648,20 @@ export const DiagramCanvas = ({ allTools }) => {
                     ? { padding: '4px 8px', backgroundColor: '#f0f8ff', border: '1px solid #0073bb', color: '#0073bb', fontSize: '12px', textAlign: 'left', cursor: 'pointer', fontWeight: 500 }
                     : { padding: '4px 8px', backgroundColor: 'white', border: '1px solid #d1d5db', color: 'black', fontSize: '12px', textAlign: 'left', cursor: 'pointer' };
 
+                const getDirectionStyle = (dirMatch) => currentDirection === dirMatch
+                    ? { padding: '4px 8px', backgroundColor: '#f0f8ff', border: '1px solid #0073bb', color: '#0073bb', fontSize: '12px', textAlign: 'left', cursor: 'pointer', fontWeight: 500 }
+                    : { padding: '4px 8px', backgroundColor: 'white', border: '1px solid #d1d5db', color: 'black', fontSize: '12px', textAlign: 'left', cursor: 'pointer' };
+
                 return (
                     <div 
                         style={{ left: edgeMenu.x, top: edgeMenu.y, position: 'absolute', zIndex: 20, backgroundColor: 'white', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', border: '1px solid #d1d5db', width: '208px', fontSize: '14px', fontFamily: 'sans-serif', display: 'flex', flexDirection: 'column' }}
                     >
-                        <div style={{ backgroundColor: '#1e293b', color: 'white', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-                            <span style={{ fontSize: '12px', fontWeight: 'bold', letterSpacing: '0.025em' }}>Edit Line</span>
-                            <button onClick={closeMenus} style={{ color: '#d1d5db', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px' }} onMouseEnter={(e)=>e.currentTarget.style.color='white'} onMouseLeave={(e)=>e.currentTarget.style.color='#d1d5db'}>&times;</button>
+                        <div 
+                            style={{ backgroundColor: '#1e293b', color: 'white', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, cursor: 'grab' }}
+                            onPointerDown={(e) => handleMenuDragStart(e, 'edge')}
+                        >
+                            <span style={{ fontSize: '12px', fontWeight: 'bold', letterSpacing: '0.025em', pointerEvents: 'none' }}>Edit Line</span>
+                            <button onClick={closeMenus} style={{ color: '#d1d5db', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', zIndex: 10 }} onMouseEnter={(e)=>e.currentTarget.style.color='white'} onMouseLeave={(e)=>e.currentTarget.style.color='#d1d5db'}>&times;</button>
                         </div>
 
                         <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -530,8 +694,17 @@ export const DiagramCanvas = ({ allTools }) => {
                                 </div>
                             </div>
 
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 600, color: '#374151' }}>Line Direction</span>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <button onClick={() => updateSelectedEdgeArrows('forward')} style={getDirectionStyle('forward')} onMouseEnter={(e)=>e.currentTarget.style.backgroundColor='#f9fafb'} onMouseLeave={(e)=>e.currentTarget.style.backgroundColor=currentDirection==='forward'?'#f0f8ff':'white'}>Forward Arrow</button>
+                                    <button onClick={() => updateSelectedEdgeArrows('both')} style={getDirectionStyle('both')} onMouseEnter={(e)=>e.currentTarget.style.backgroundColor='#f9fafb'} onMouseLeave={(e)=>e.currentTarget.style.backgroundColor=currentDirection==='both'?'#f0f8ff':'white'}>Bi-Directional</button>
+                                    <button onClick={() => updateSelectedEdgeArrows('none')} style={getDirectionStyle('none')} onMouseEnter={(e)=>e.currentTarget.style.backgroundColor='#f9fafb'} onMouseLeave={(e)=>e.currentTarget.style.backgroundColor=currentDirection==='none'?'#f0f8ff':'white'}>No Arrows</button>
+                                </div>
+                            </div>
+
                             <div style={{ paddingTop: '8px', borderTop: '1px solid #e5e7eb' }}>
-                                <button onClick={() => { setEdges(eds => eds.filter(e => e.id !== edgeMenu.id)); setEdgeMenu(null); }} style={{ width: '100%', padding: '6px 8px', backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }} onMouseEnter={(e)=>e.currentTarget.style.backgroundColor='#fee2e2'} onMouseLeave={(e)=>e.currentTarget.style.backgroundColor='#fef2f2'}>Delete Connection</button>
+                                <button onClick={() => { takeSnapshot(); setEdges(eds => eds.filter(e => e.id !== edgeMenu.id)); setEdgeMenu(null); }} style={{ width: '100%', padding: '6px 8px', backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }} onMouseEnter={(e)=>e.currentTarget.style.backgroundColor='#fee2e2'} onMouseLeave={(e)=>e.currentTarget.style.backgroundColor='#fef2f2'}>Delete Connection</button>
                             </div>
                         </div>
                     </div>
@@ -541,9 +714,12 @@ export const DiagramCanvas = ({ allTools }) => {
             {/* Floating Properties Panel for Custom Groups via Right Click */}
             {nodeMenu && nodeMenu.type === 'awsGroup' && (
                 <div style={{ left: nodeMenu.x, top: nodeMenu.y, position: 'absolute', zIndex: 20, backgroundColor: 'white', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', border: '1px solid #d1d5db', width: '256px', fontSize: '14px', fontFamily: 'sans-serif', display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ backgroundColor: '#1e293b', color: 'white', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-                        <span style={{ fontSize: '12px', fontWeight: 'bold', letterSpacing: '0.025em' }}>Boundary Properties</span>
-                        <button onClick={closeMenus} style={{ color: '#d1d5db', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px' }} onMouseEnter={(e)=>e.currentTarget.style.color='white'} onMouseLeave={(e)=>e.currentTarget.style.color='#d1d5db'}>&times;</button>
+                    <div 
+                        style={{ backgroundColor: '#1e293b', color: 'white', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, cursor: 'grab' }}
+                        onPointerDown={(e) => handleMenuDragStart(e, 'node')}
+                    >
+                        <span style={{ fontSize: '12px', fontWeight: 'bold', letterSpacing: '0.025em', pointerEvents: 'none' }}>Boundary Properties</span>
+                        <button onClick={closeMenus} style={{ color: '#d1d5db', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', zIndex: 10 }} onMouseEnter={(e)=>e.currentTarget.style.color='white'} onMouseLeave={(e)=>e.currentTarget.style.color='#d1d5db'}>&times;</button>
                     </div>
 
                     <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -617,21 +793,28 @@ export const DiagramCanvas = ({ allTools }) => {
                                     value={nodeMenu.data.iconName || 'box'}
                                     onChange={e => updateSelectedGroupData('iconName', e.target.value)}
                                 >
-                                    <option value="cloud">Cloud</option>
-                                    <option value="globe">Globe</option>
-                                    <option value="lock">Lock</option>
-                                    <option value="shield">Shield</option>
-                                    <option value="server">Server</option>
-                                    <option value="grid">Grid</option>
-                                    <option value="box">Box</option>
-                                    <option value="none">None</option>
+                                    <optgroup label="Basic Shapes">
+                                        <option value="cloud">Cloud</option>
+                                        <option value="globe">Globe</option>
+                                        <option value="lock">Lock</option>
+                                        <option value="shield">Shield</option>
+                                        <option value="server">Server</option>
+                                        <option value="grid">Grid</option>
+                                        <option value="box">Box</option>
+                                        <option value="none">None</option>
+                                    </optgroup>
+                                    <optgroup label="AWS Services">
+                                        {allTools.map(tool => (
+                                            <option key={tool.id} value={tool.icon}>{tool.name}</option>
+                                        ))}
+                                    </optgroup>
                                 </select>
                             </div>
                         </div>
                         
                         <div style={{ marginTop: '4px', paddingTop: '12px', borderTop: '1px solid #e5e7eb' }}>
                             <button 
-                                onClick={() => { setNodes(nds => nds.filter(n => n.id !== nodeMenu.id)); closeMenus(); }} 
+                                onClick={() => { takeSnapshot(); setNodes(nds => nds.filter(n => n.id !== nodeMenu.id)); closeMenus(); }} 
                                 style={{ width: '100%', textAlign: 'center', padding: '6px 0', backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
                                 onMouseEnter={(e)=>e.currentTarget.style.backgroundColor='#fee2e2'} 
                                 onMouseLeave={(e)=>e.currentTarget.style.backgroundColor='#fef2f2'}
