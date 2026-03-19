@@ -7,19 +7,26 @@ import {
     applyEdgeChanges,
     addEdge,
     useReactFlow,
+    useViewport,
     MiniMap
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { AwsResourceNode } from './nodes/AwsResourceNode';
 import { AwsGroupNode } from './nodes/AwsGroupNode';
+import { StepBubbleNode } from './nodes/StepBubbleNode';
+import { EditableEdge } from './edges/EditableEdge';
 
 import { MousePointer2, Hand, Trash2 } from 'lucide-react';
 
-const nodeTypes = { awsNode: AwsResourceNode, awsGroup: AwsGroupNode };
+const nodeTypes = { awsNode: AwsResourceNode, awsGroup: AwsGroupNode, stepBubble: StepBubbleNode };
+const edgeTypes = { smoothstep: EditableEdge, editable: EditableEdge };
 
 export const DiagramCanvas = ({ allTools }) => {
     const reactFlowWrapper = useRef(null);
     const { screenToFlowPosition, getNodes } = useReactFlow();
+    const { x: viewportX, y: viewportY, zoom } = useViewport();
+
+    const [helperLines, setHelperLines] = useState({ horizontal: null, vertical: null });
 
     const [nodes, setNodes] = useState(() => {
         try {
@@ -49,7 +56,16 @@ export const DiagramCanvas = ({ allTools }) => {
 
     const onNodesChange = useCallback((changes) => setNodes((nds) => applyNodeChanges(changes, nds)), []);
     const onEdgesChange = useCallback((changes) => setEdges((eds) => applyEdgeChanges(changes, eds)), []);
-    const onConnect = useCallback((connection) => setEdges((eds) => addEdge({...connection, type: 'smoothstep', animated: false, style: { strokeWidth: 2, stroke: '#545b64' }}, eds)), []);
+    const onConnect = useCallback((connection) => setEdges((eds) => {
+        const newEdge = {
+            ...connection,
+            id: `edge_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+            type: 'editable',
+            animated: false,
+            style: { strokeWidth: 2, stroke: '#545b64' }
+        };
+        return eds.concat(newEdge);
+    }), []);
 
     const onNodeContextMenu = (event, node) => {
         event.preventDefault();
@@ -104,6 +120,11 @@ export const DiagramCanvas = ({ allTools }) => {
             }
             return e;
         }));
+    };
+
+    const updateSelectedEdgeType = (type) => {
+        if (!edgeMenu) return;
+        setEdges(eds => eds.map(e => e.id === edgeMenu.id ? { ...e, type } : e));
     };
 
     const updateSelectedEdgeColor = (hexCode) => {
@@ -251,9 +272,99 @@ export const DiagramCanvas = ({ allTools }) => {
                 };
                 setNodes((nds) => nds.concat(newNode));
             }
+            else if (dropData.type === 'stepBubble') {
+                const newNode = {
+                    id: `step_${Date.now()}`,
+                    type: 'stepBubble',
+                    position,
+                    data: { step: '1', color: '#16191f' },
+                    parentId: parentNodeId,
+                    extent: parentNodeId ? 'parent' : undefined
+                };
+                setNodes((nds) => nds.concat(newNode));
+            }
         },
         [screenToFlowPosition, allTools, getNodes],
     );
+
+    // Standardizes the recursive absolute coordinate fetching logic for Figma-style precision
+    const getAbsolutePosition = (nodeData, allNodes) => {
+        let absX = nodeData.positionAbsolute?.x ?? nodeData.computed?.positionAbsolute?.x ?? nodeData.position.x;
+        let absY = nodeData.positionAbsolute?.y ?? nodeData.computed?.positionAbsolute?.y ?? nodeData.position.y;
+        
+        if (typeof nodeData.positionAbsolute === 'undefined' && typeof nodeData.computed?.positionAbsolute === 'undefined' && nodeData.parentId) {
+            let currParentId = nodeData.parentId;
+            while (currParentId) {
+                const pNode = allNodes.find(pn => pn.id === currParentId);
+                if (!pNode) break;
+                absX += (pNode.positionAbsolute?.x ?? pNode.computed?.positionAbsolute?.x ?? pNode.position.x);
+                absY += (pNode.positionAbsolute?.y ?? pNode.computed?.positionAbsolute?.y ?? pNode.position.y);
+                currParentId = pNode.parentId;
+            }
+        }
+        return { x: absX, y: absY };
+    };
+
+    // Auto-draw Figma Alignment Action Guidelines while actively dragging
+    const onNodeDrag = useCallback((event, node) => {
+        const nds = getNodes();
+        let horizontal = null;
+        let vertical = null;
+        const threshold = 15;
+
+        const nodeAbs = getAbsolutePosition(node, nds);
+
+        for (let n of nds) {
+            if (n.id === node.id || n.parentId !== node.parentId) continue;
+            
+            const nAbs = getAbsolutePosition(n, nds);
+            
+            // Y-axis alignment (Horizontal dash)
+            if (Math.abs(nAbs.y - nodeAbs.y) < threshold) {
+                horizontal = nAbs.y; 
+            }
+            
+            // X-axis alignment (Vertical dash)
+            if (Math.abs(nAbs.x - nodeAbs.x) < threshold) {
+                vertical = nAbs.x; 
+            }
+        }
+
+        setHelperLines({ horizontal, vertical });
+    }, [getNodes]);
+
+    // Figma-style Smart Alignment: Auto-snap to exact X or Y of nearby nodes on drop
+    const onNodeDragStop = useCallback((event, node) => {
+        setHelperLines({ horizontal: null, vertical: null });
+        setNodes((nds) => {
+            let snapped = false;
+            let newX = node.position.x;
+            let newY = node.position.y;
+            const threshold = 15;
+
+            // Find closest nodes on X and Y axes
+            for (let n of nds) {
+                if (n.id === node.id || n.parentId !== node.parentId) continue;
+                
+                // Snap Y axis (Horizontal Alignment)
+                if (Math.abs(n.position.y - node.position.y) < threshold) {
+                    newY = n.position.y;
+                    snapped = true;
+                }
+                
+                // Snap X axis (Vertical Alignment)
+                if (Math.abs(n.position.x - node.position.x) < threshold) {
+                    newX = n.position.x;
+                    snapped = true;
+                }
+            }
+
+            if (snapped) {
+                return nds.map(n => n.id === node.id ? { ...n, position: { x: newX, y: newY } } : n);
+            }
+            return nds;
+        });
+    }, []);
 
     return (
         <div className="flex-1 right-0 h-full relative" ref={reactFlowWrapper}>
@@ -265,6 +376,8 @@ export const DiagramCanvas = ({ allTools }) => {
                 onConnect={onConnect}
                 onDrop={onDrop}
                 onDragOver={onDragOver}
+                onNodeDrag={onNodeDrag}
+                onNodeDragStop={onNodeDragStop}
                 onNodeContextMenu={onNodeContextMenu}
                 onEdgeContextMenu={onEdgeContextMenu}
                 onPaneClick={closeMenus}
@@ -274,8 +387,9 @@ export const DiagramCanvas = ({ allTools }) => {
                 panOnScroll={true}
                 zoomOnDoubleClick={false}
                 nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
                 fitView
-                defaultEdgeOptions={{ type: 'smoothstep' }}
+                defaultEdgeOptions={{ type: 'editable' }}
                 className="bg-[#f2f3f3]"
             >
                 <Background color="#cbd5e1" gap={20} size={1.5} />
@@ -329,82 +443,139 @@ export const DiagramCanvas = ({ allTools }) => {
                 </ul>
             </div>
 
-            {/* Floating Context Menu for Edges */}
-            {edgeMenu && (
+            {/* Figma Helper Lines Overlay */}
+            {helperLines.horizontal !== null && (
                 <div 
-                    style={{ left: edgeMenu.x, top: edgeMenu.y }}
-                    className="absolute z-20 bg-white shadow-xl w-52 text-sm font-sans flex flex-col border border-gray-300"
-                >
-                    <div className="bg-slate-800 text-white px-3 py-2 flex justify-between items-center shrink-0">
-                        <span className="text-xs font-bold tracking-wide">Edit Line</span>
-                        <button onClick={closeMenus} className="text-gray-300 hover:text-white">&times;</button>
-                    </div>
-
-                    <div className="p-3 flex flex-col gap-4">
-                        <div className="flex flex-col gap-1.5">
-                            <span className="text-[11px] font-semibold text-gray-700">Line Color</span>
-                            <div className="flex gap-2 w-full justify-between">
-                                <button onClick={() => updateSelectedEdgeColor('#545b64')} style={{ backgroundColor: '#545b64' }} className="w-5 h-5 cursor-pointer ring-1 ring-inset ring-black/20 hover:scale-110 transition-transform"></button>
-                                <button onClick={() => updateSelectedEdgeColor('#3b82f6')} style={{ backgroundColor: '#3b82f6' }} className="w-5 h-5 cursor-pointer ring-1 ring-inset ring-black/20 hover:scale-110 transition-transform"></button>
-                                <button onClick={() => updateSelectedEdgeColor('#22c55e')} style={{ backgroundColor: '#22c55e' }} className="w-5 h-5 cursor-pointer ring-1 ring-inset ring-black/20 hover:scale-110 transition-transform"></button>
-                                <button onClick={() => updateSelectedEdgeColor('#ef4444')} style={{ backgroundColor: '#ef4444' }} className="w-5 h-5 cursor-pointer ring-1 ring-inset ring-black/20 hover:scale-110 transition-transform"></button>
-                                <button onClick={() => updateSelectedEdgeColor('#f97316')} style={{ backgroundColor: '#f97316' }} className="w-5 h-5 cursor-pointer ring-1 ring-inset ring-black/20 hover:scale-110 transition-transform"></button>
-                                <button onClick={() => updateSelectedEdgeColor('#a855f7')} style={{ backgroundColor: '#a855f7' }} className="w-5 h-5 cursor-pointer ring-1 ring-inset ring-black/20 hover:scale-110 transition-transform"></button>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col gap-1.5">
-                            <span className="text-[11px] font-semibold text-gray-700">Line Pattern</span>
-                            <div className="flex flex-col gap-1">
-                                <button onClick={() => updateSelectedEdgeStyle('none', false)} className="px-2 py-1 bg-white border border-gray-300 hover:bg-gray-50 text-xs text-left cursor-pointer">Solid Path</button>
-                                <button onClick={() => updateSelectedEdgeStyle('5 5', false)} className="px-2 py-1 bg-white border border-gray-300 hover:bg-gray-50 text-xs text-left cursor-pointer">Dashed Path</button>
-                                <button onClick={() => updateSelectedEdgeStyle('5 5', true)} className="px-2 py-1 bg-[#f0f8ff] border border-[#0073bb] text-[#0073bb] hover:bg-blue-50 text-xs text-left cursor-pointer font-medium">Animated Flow</button>
-                            </div>
-                        </div>
-
-                        <div className="pt-2 border-t border-gray-200">
-                            <button onClick={() => setEdges(eds => eds.filter(e => e.id !== edgeMenu.id)) || setEdgeMenu(null)} className="w-full px-2 py-1.5 bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 text-xs cursor-pointer font-medium">Delete Connection</button>
-                        </div>
-                    </div>
-                </div>
+                    className="absolute left-0 w-full pointer-events-none" 
+                    style={{ 
+                        top: helperLines.horizontal * zoom + viewportY, 
+                        zIndex: 9999,
+                        borderTop: '2px dashed #0073bb',
+                        opacity: 0.8 
+                    }} 
+                />
             )}
+            {helperLines.vertical !== null && (
+                <div 
+                    className="absolute top-0 h-full pointer-events-none" 
+                    style={{ 
+                        left: helperLines.vertical * zoom + viewportX, 
+                        zIndex: 9999,
+                        borderLeft: '2px dashed #0073bb',
+                        opacity: 0.8 
+                    }} 
+                />
+            )}
+
+            {/* Click-away transparent backdrop */}
+            {(nodeMenu || edgeMenu) && (
+                <div 
+                    style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 15 }} 
+                    onClick={(e) => { e.stopPropagation(); closeMenus(); }}
+                    onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); closeMenus(); }}
+                />
+            )}
+
+            {/* Floating Context Menu for Edges */}
+            {edgeMenu && (() => {
+                const selectedEdge = edges.find(e => e.id === edgeMenu.id) || {};
+                const currentType = selectedEdge.type || 'editable';
+                const currentDash = selectedEdge.style?.strokeDasharray || 'none';
+                const isAnimated = selectedEdge.animated || false;
+
+                const getShapeStyle = (typeMatch) => currentType === typeMatch
+                    ? { padding: '4px 8px', backgroundColor: '#f0f8ff', border: '1px solid #0073bb', color: '#0073bb', fontSize: '12px', textAlign: 'left', cursor: 'pointer', fontWeight: 500 }
+                    : { padding: '4px 8px', backgroundColor: 'white', border: '1px solid #d1d5db', color: 'black', fontSize: '12px', textAlign: 'left', cursor: 'pointer', fontWeight: 500 };
+
+                const getPatternStyle = (dashMatch, animMatch) => (currentDash === dashMatch && isAnimated === animMatch)
+                    ? { padding: '4px 8px', backgroundColor: '#f0f8ff', border: '1px solid #0073bb', color: '#0073bb', fontSize: '12px', textAlign: 'left', cursor: 'pointer', fontWeight: 500 }
+                    : { padding: '4px 8px', backgroundColor: 'white', border: '1px solid #d1d5db', color: 'black', fontSize: '12px', textAlign: 'left', cursor: 'pointer' };
+
+                return (
+                    <div 
+                        style={{ left: edgeMenu.x, top: edgeMenu.y, position: 'absolute', zIndex: 20, backgroundColor: 'white', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', border: '1px solid #d1d5db', width: '208px', fontSize: '14px', fontFamily: 'sans-serif', display: 'flex', flexDirection: 'column' }}
+                    >
+                        <div style={{ backgroundColor: '#1e293b', color: 'white', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                            <span style={{ fontSize: '12px', fontWeight: 'bold', letterSpacing: '0.025em' }}>Edit Line</span>
+                            <button onClick={closeMenus} style={{ color: '#d1d5db', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px' }} onMouseEnter={(e)=>e.currentTarget.style.color='white'} onMouseLeave={(e)=>e.currentTarget.style.color='#d1d5db'}>&times;</button>
+                        </div>
+
+                        <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 600, color: '#374151' }}>Line Color</span>
+                                <div style={{ display: 'flex', gap: '8px', width: '100%', justifyContent: 'space-between' }}>
+                                    <button onClick={() => updateSelectedEdgeColor('#545b64')} style={{ backgroundColor: '#545b64', width: '20px', height: '20px', cursor: 'pointer', border: '1px solid rgba(0,0,0,0.2)' }}></button>
+                                    <button onClick={() => updateSelectedEdgeColor('#3b82f6')} style={{ backgroundColor: '#3b82f6', width: '20px', height: '20px', cursor: 'pointer', border: '1px solid rgba(0,0,0,0.2)' }}></button>
+                                    <button onClick={() => updateSelectedEdgeColor('#22c55e')} style={{ backgroundColor: '#22c55e', width: '20px', height: '20px', cursor: 'pointer', border: '1px solid rgba(0,0,0,0.2)' }}></button>
+                                    <button onClick={() => updateSelectedEdgeColor('#ef4444')} style={{ backgroundColor: '#ef4444', width: '20px', height: '20px', cursor: 'pointer', border: '1px solid rgba(0,0,0,0.2)' }}></button>
+                                    <button onClick={() => updateSelectedEdgeColor('#f97316')} style={{ backgroundColor: '#f97316', width: '20px', height: '20px', cursor: 'pointer', border: '1px solid rgba(0,0,0,0.2)' }}></button>
+                                    <button onClick={() => updateSelectedEdgeColor('#a855f7')} style={{ backgroundColor: '#a855f7', width: '20px', height: '20px', cursor: 'pointer', border: '1px solid rgba(0,0,0,0.2)' }}></button>
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 600, color: '#374151' }}>Line Shape</span>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <button onClick={() => updateSelectedEdgeType('editable')} style={getShapeStyle('editable')} onMouseEnter={(e)=>e.currentTarget.style.backgroundColor='#f9fafb'} onMouseLeave={(e)=>e.currentTarget.style.backgroundColor=currentType==='editable'?'#f0f8ff':'white'}>Perpendicular (Straight)</button>
+                                    <button onClick={() => updateSelectedEdgeType('default')} style={getShapeStyle('default')} onMouseEnter={(e)=>e.currentTarget.style.backgroundColor='#f9fafb'} onMouseLeave={(e)=>e.currentTarget.style.backgroundColor=currentType==='default'?'#f0f8ff':'white'}>Curved Route</button>
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 600, color: '#374151' }}>Line Pattern</span>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <button onClick={() => updateSelectedEdgeStyle('none', false)} style={getPatternStyle('none', false)} onMouseEnter={(e)=>e.currentTarget.style.backgroundColor='#f9fafb'} onMouseLeave={(e)=>e.currentTarget.style.backgroundColor=(currentDash==='none'&&!isAnimated)?'#f0f8ff':'white'}>Solid Path</button>
+                                    <button onClick={() => updateSelectedEdgeStyle('5 5', false)} style={getPatternStyle('5 5', false)} onMouseEnter={(e)=>e.currentTarget.style.backgroundColor='#f9fafb'} onMouseLeave={(e)=>e.currentTarget.style.backgroundColor=(currentDash==='5 5'&&!isAnimated)?'#f0f8ff':'white'}>Dashed Path</button>
+                                    <button onClick={() => updateSelectedEdgeStyle('5 5', true)} style={getPatternStyle('5 5', true)} onMouseEnter={(e)=>e.currentTarget.style.backgroundColor='#f9fafb'} onMouseLeave={(e)=>e.currentTarget.style.backgroundColor=(currentDash==='5 5'&&isAnimated)?'#f0f8ff':'white'}>Animated Flow</button>
+                                </div>
+                            </div>
+
+                            <div style={{ paddingTop: '8px', borderTop: '1px solid #e5e7eb' }}>
+                                <button onClick={() => { setEdges(eds => eds.filter(e => e.id !== edgeMenu.id)); setEdgeMenu(null); }} style={{ width: '100%', padding: '6px 8px', backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }} onMouseEnter={(e)=>e.currentTarget.style.backgroundColor='#fee2e2'} onMouseLeave={(e)=>e.currentTarget.style.backgroundColor='#fef2f2'}>Delete Connection</button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
 
             {/* Floating Properties Panel for Custom Groups via Right Click */}
             {nodeMenu && nodeMenu.type === 'awsGroup' && (
-                <div style={{ left: nodeMenu.x, top: nodeMenu.y }} className="absolute z-20 bg-white shadow-xl border border-gray-300 w-64 text-sm font-sans flex flex-col">
-                    <div className="bg-slate-800 text-white px-3 py-2 flex justify-between items-center shrink-0">
-                        <span className="text-xs font-bold tracking-wide">Boundary Properties</span>
-                        <button onClick={closeMenus} className="text-gray-300 hover:text-white">&times;</button>
+                <div style={{ left: nodeMenu.x, top: nodeMenu.y, position: 'absolute', zIndex: 20, backgroundColor: 'white', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', border: '1px solid #d1d5db', width: '256px', fontSize: '14px', fontFamily: 'sans-serif', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ backgroundColor: '#1e293b', color: 'white', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                        <span style={{ fontSize: '12px', fontWeight: 'bold', letterSpacing: '0.025em' }}>Boundary Properties</span>
+                        <button onClick={closeMenus} style={{ color: '#d1d5db', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px' }} onMouseEnter={(e)=>e.currentTarget.style.color='white'} onMouseLeave={(e)=>e.currentTarget.style.color='#d1d5db'}>&times;</button>
                     </div>
 
-                    <div className="p-3 flex flex-col gap-3">
-                        <div className="flex flex-col gap-1">
-                            <span className="text-[11px] font-semibold text-gray-700">Label</span>
+                    <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: '#374151', paddingBottom: '2px' }}>Label (Black text inside boundary)</span>
                             <input 
                                 type="text" 
-                                className="border border-gray-300 bg-white text-xs px-2 py-1.5 w-full focus:outline-none focus:border-[#0073bb] focus:ring-1 focus:ring-[#0073bb]" 
+                                style={{ border: '1px solid #d1d5db', backgroundColor: 'white', color: 'black', fontSize: '12px', padding: '6px 8px', width: '100%', boxSizing: 'border-box', outline: 'none' }} 
                                 value={nodeMenu.data.label || ''} 
                                 onChange={e => updateSelectedGroupData('label', e.target.value)} 
+                                onFocus={e => e.currentTarget.style.borderColor = '#0073bb'}
+                                onBlur={e => e.currentTarget.style.borderColor = '#d1d5db'}
                             />
                         </div>
 
-                        <div className="flex flex-col gap-1">
-                            <span className="text-[11px] font-semibold text-gray-700">Theme Color</span>
-                            <div className="flex gap-2 w-full justify-between mt-1">
-                                <button onClick={() => updateSelectedGroupData('color', 'dark')} style={{ backgroundColor: '#232f3e' }} className="w-5 h-5 cursor-pointer ring-1 ring-inset ring-black/20 hover:scale-110 transition-transform" title="AWS Dark"></button>
-                                <button onClick={() => updateSelectedGroupData('color', 'blue')} style={{ backgroundColor: '#3b82f6' }} className="w-5 h-5 cursor-pointer ring-1 ring-inset ring-black/20 hover:scale-110 transition-transform" title="Blue"></button>
-                                <button onClick={() => updateSelectedGroupData('color', 'green')} style={{ backgroundColor: '#22c55e' }} className="w-5 h-5 cursor-pointer ring-1 ring-inset ring-black/20 hover:scale-110 transition-transform" title="Green"></button>
-                                <button onClick={() => updateSelectedGroupData('color', 'orange')} style={{ backgroundColor: '#f97316' }} className="w-5 h-5 cursor-pointer ring-1 ring-inset ring-black/20 hover:scale-110 transition-transform" title="Orange"></button>
-                                <button onClick={() => updateSelectedGroupData('color', 'slate')} style={{ backgroundColor: '#64748b' }} className="w-5 h-5 cursor-pointer ring-1 ring-inset ring-black/20 hover:scale-110 transition-transform" title="Slate"></button>
-                                <button onClick={() => updateSelectedGroupData('color', 'purple')} style={{ backgroundColor: '#a855f7' }} className="w-5 h-5 cursor-pointer ring-1 ring-inset ring-black/20 hover:scale-110 transition-transform" title="Purple"></button>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: '#374151' }}>Theme Color</span>
+                            <div style={{ display: 'flex', gap: '8px', width: '100%', justifyContent: 'space-between', marginTop: '4px' }}>
+                                <button onClick={() => updateSelectedGroupData('color', 'dark')} style={{ backgroundColor: '#232f3e', width: '20px', height: '20px', cursor: 'pointer', border: '1px solid rgba(0,0,0,0.2)' }} title="AWS Dark"></button>
+                                <button onClick={() => updateSelectedGroupData('color', 'blue')} style={{ backgroundColor: '#3b82f6', width: '20px', height: '20px', cursor: 'pointer', border: '1px solid rgba(0,0,0,0.2)' }} title="Blue"></button>
+                                <button onClick={() => updateSelectedGroupData('color', 'green')} style={{ backgroundColor: '#22c55e', width: '20px', height: '20px', cursor: 'pointer', border: '1px solid rgba(0,0,0,0.2)' }} title="Green"></button>
+                                <button onClick={() => updateSelectedGroupData('color', 'orange')} style={{ backgroundColor: '#f97316', width: '20px', height: '20px', cursor: 'pointer', border: '1px solid rgba(0,0,0,0.2)' }} title="Orange"></button>
+                                <button onClick={() => updateSelectedGroupData('color', 'slate')} style={{ backgroundColor: '#64748b', width: '20px', height: '20px', cursor: 'pointer', border: '1px solid rgba(0,0,0,0.2)' }} title="Slate"></button>
+                                <button onClick={() => updateSelectedGroupData('color', 'purple')} style={{ backgroundColor: '#a855f7', width: '20px', height: '20px', cursor: 'pointer', border: '1px solid rgba(0,0,0,0.2)' }} title="Purple"></button>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="flex flex-col gap-1">
-                                <span className="text-[11px] font-semibold text-gray-700">Style</span>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 600, color: '#374151' }}>Style</span>
                                 <select 
-                                    className="border border-gray-300 bg-white text-xs px-2 py-1.5 w-full focus:outline-none focus:border-[#0073bb] cursor-pointer"
+                                    style={{ border: '1px solid #d1d5db', backgroundColor: 'white', color: 'black', fontSize: '12px', padding: '6px 8px', width: '100%', boxSizing: 'border-box', outline: 'none', cursor: 'pointer' }}
                                     value={nodeMenu.data.fillStyle || 'outline'}
                                     onChange={e => updateSelectedGroupData('fillStyle', e.target.value)}
                                 >
@@ -412,10 +583,10 @@ export const DiagramCanvas = ({ allTools }) => {
                                     <option value="solid">Solid</option>
                                 </select>
                             </div>
-                            <div className="flex flex-col gap-1">
-                                <span className="text-[11px] font-semibold text-gray-700">Stroke</span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 600, color: '#374151' }}>Stroke</span>
                                 <select 
-                                    className="border border-gray-300 bg-white text-xs px-2 py-1.5 w-full focus:outline-none focus:border-[#0073bb] cursor-pointer"
+                                    style={{ border: '1px solid #d1d5db', backgroundColor: 'white', color: 'black', fontSize: '12px', padding: '6px 8px', width: '100%', boxSizing: 'border-box', outline: 'none', cursor: 'pointer' }}
                                     value={nodeMenu.data.borderWidth || 2}
                                     onChange={e => updateSelectedGroupData('borderWidth', parseInt(e.target.value))}
                                 >
@@ -427,11 +598,11 @@ export const DiagramCanvas = ({ allTools }) => {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="flex flex-col gap-1">
-                                <span className="text-[11px] font-semibold text-gray-700">Dash</span>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 600, color: '#374151' }}>Dash</span>
                                 <select 
-                                    className="border border-gray-300 bg-white text-xs px-2 py-1.5 w-full focus:outline-none focus:border-[#0073bb] cursor-pointer"
+                                    style={{ border: '1px solid #d1d5db', backgroundColor: 'white', color: 'black', fontSize: '12px', padding: '6px 8px', width: '100%', boxSizing: 'border-box', outline: 'none', cursor: 'pointer' }}
                                     value={nodeMenu.data.borderStyle || 'solid'}
                                     onChange={e => updateSelectedGroupData('borderStyle', e.target.value)}
                                 >
@@ -439,10 +610,10 @@ export const DiagramCanvas = ({ allTools }) => {
                                     <option value="dashed">Dashed</option>
                                 </select>
                             </div>
-                            <div className="flex flex-col gap-1">
-                                <span className="text-[11px] font-semibold text-gray-700">Icon</span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 600, color: '#374151' }}>Icon</span>
                                 <select 
-                                    className="border border-gray-300 bg-white text-xs px-2 py-1.5 w-full focus:outline-none focus:border-[#0073bb] cursor-pointer"
+                                    style={{ border: '1px solid #d1d5db', backgroundColor: 'white', color: 'black', fontSize: '12px', padding: '6px 8px', width: '100%', boxSizing: 'border-box', outline: 'none', cursor: 'pointer' }}
                                     value={nodeMenu.data.iconName || 'box'}
                                     onChange={e => updateSelectedGroupData('iconName', e.target.value)}
                                 >
@@ -458,8 +629,13 @@ export const DiagramCanvas = ({ allTools }) => {
                             </div>
                         </div>
                         
-                        <div className="mt-1 pt-3 border-t border-gray-200">
-                            <button onClick={() => setNodes(nds => nds.filter(n => n.id !== nodeMenu.id)) || closeMenus()} className="w-full text-center py-1.5 bg-red-50 text-red-700 border border-red-200 text-xs font-semibold hover:bg-red-100 cursor-pointer">
+                        <div style={{ marginTop: '4px', paddingTop: '12px', borderTop: '1px solid #e5e7eb' }}>
+                            <button 
+                                onClick={() => { setNodes(nds => nds.filter(n => n.id !== nodeMenu.id)); closeMenus(); }} 
+                                style={{ width: '100%', textAlign: 'center', padding: '6px 0', backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+                                onMouseEnter={(e)=>e.currentTarget.style.backgroundColor='#fee2e2'} 
+                                onMouseLeave={(e)=>e.currentTarget.style.backgroundColor='#fef2f2'}
+                            >
                                 Delete Boundary
                             </button>
                         </div>

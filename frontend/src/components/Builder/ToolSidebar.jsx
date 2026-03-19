@@ -17,6 +17,70 @@ export const ToolSidebar = ({ allTools }) => {
     const uniqueTools = Array.from(new Map(allTools.map(t => [t.name.trim(), t])).values());
     const filtered = uniqueTools.filter(t => t.name.toLowerCase().includes(search.toLowerCase()) || t.category.toLowerCase().includes(search.toLowerCase()));
 
+    const essentials = filtered.filter(t => t.popular);
+    const others = filtered.filter(t => !t.popular);
+
+    const renderToolCard = (tool) => (
+        <div 
+            key={tool.id + '-' + tool.name} 
+            draggable 
+            onDragStart={(e) => onDragStart(e, tool)}
+            title={tool.name}
+            style={{
+                border: '1px solid #e5e7eb',
+                borderRadius: '6px',
+                padding: '6px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+                gap: '4px',
+                cursor: 'grab',
+                backgroundColor: 'white',
+                textAlign: 'center',
+                boxSizing: 'border-box',
+                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                height: '85px',
+                overflow: 'hidden',
+                width: '100%',
+                minWidth: 0
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.backgroundColor = '#f9fafb'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.backgroundColor = 'white'; }}
+        >
+            <div style={{ flexShrink: 0, width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '2px' }}>
+                <img 
+                    src={"/" + tool.icon} 
+                    alt={tool.name} 
+                    draggable="false" 
+                    style={{ maxWidth: '28px', maxHeight: '28px', objectFit: 'contain', pointerEvents: 'none' }} 
+                />
+            </div>
+            <span 
+                style={{ 
+                    fontSize: '10px', 
+                    fontWeight: 600, 
+                    color: '#374151', 
+                    lineHeight: '1.2', 
+                    width: '100%', 
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    wordBreak: 'break-word',
+                    marginTop: 'auto',
+                    marginBottom: 'auto',
+                    padding: '0 2px',
+                    boxSizing: 'border-box',
+                    whiteSpace: 'normal'
+                }}
+            >
+                {tool.name}
+            </span>
+        </div>
+    );
+
     return (
         <aside 
             className="shrink-0 bg-white border-l border-gray-200 flex flex-col h-full shadow-xl z-20"
@@ -87,79 +151,37 @@ export const ToolSidebar = ({ allTools }) => {
                         <div 
                             draggable 
                             onDragStart={(e) => onDragGroupStart(e, 'custom')} 
-                            style={{ gridColumn: 'span 2', border: '2px solid #c084fc', borderRadius: '6px', backgroundColor: 'white', padding: '8px', cursor: 'grab', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: '#7e22ce', boxSizing: 'border-box' }}
+                            style={{ border: '2px solid #c084fc', borderRadius: '6px', backgroundColor: 'white', padding: '8px', cursor: 'grab', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: '#7e22ce', boxSizing: 'border-box' }}
                         >
                             Custom Boundary
+                        </div>
+                        <div 
+                            draggable 
+                            onDragStart={(e) => { e.dataTransfer.setData('application/reactflow', JSON.stringify({ type: 'stepBubble' })); e.dataTransfer.effectAllowed = 'move'; }} 
+                            style={{ border: '2px solid #1f2937', borderRadius: '6px', backgroundColor: 'white', padding: '8px', cursor: 'grab', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: '#111827', boxSizing: 'border-box' }}
+                        >
+                            Step Bubble
                         </div>
                     </div>
                 </div>
 
-                <div>
-                    <h4 style={{ fontSize: '11px', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0' }}>Services</h4>
-                    
-                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '8px', gridAutoRows: '85px' }}>
-                        {filtered.map(tool => (
-                            <div 
-                                key={tool.id + '-' + tool.name} 
-                                draggable 
-                                onDragStart={(e) => onDragStart(e, tool)}
-                                title={tool.name}
-                                style={{
-                                    border: '1px solid #e5e7eb',
-                                    borderRadius: '6px',
-                                    padding: '6px',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    justifyContent: 'flex-start',
-                                    gap: '4px',
-                                    cursor: 'grab',
-                                    backgroundColor: 'white',
-                                    textAlign: 'center',
-                                    boxSizing: 'border-box',
-                                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                                    height: '85px',
-                                    overflow: 'hidden',
-                                    width: '100%',
-                                    minWidth: 0
-                                }}
-                                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.backgroundColor = '#f9fafb'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.backgroundColor = 'white'; }}
-                            >
-                                <div style={{ flexShrink: 0, width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '2px' }}>
-                                    <img 
-                                        src={"/" + tool.icon} 
-                                        alt={tool.name} 
-                                        draggable="false" 
-                                        style={{ maxWidth: '28px', maxHeight: '28px', objectFit: 'contain', pointerEvents: 'none' }} 
-                                    />
-                                </div>
-                                <span 
-                                    style={{ 
-                                        fontSize: '10px', 
-                                        fontWeight: 600, 
-                                        color: '#374151', 
-                                        lineHeight: '1.2', 
-                                        width: '100%', 
-                                        display: '-webkit-box',
-                                        WebkitLineClamp: 2,
-                                        WebkitBoxOrient: 'vertical',
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
-                                        wordBreak: 'break-word',
-                                        marginTop: 'auto',
-                                        marginBottom: 'auto',
-                                        padding: '0 2px',
-                                        boxSizing: 'border-box',
-                                        whiteSpace: 'normal'
-                                    }}
-                                >
-                                    {tool.name}
-                                </span>
-                            </div>
-                        ))}
+                {essentials.length > 0 && (
+                    <div style={{ marginBottom: '16px' }}>
+                        <h4 style={{ fontSize: '11px', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0' }}>Essentials</h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '8px', gridAutoRows: '85px' }}>
+                            {essentials.map(renderToolCard)}
+                        </div>
                     </div>
-                </div>
+                )}
+
+                {others.length > 0 && (
+                    <div>
+                        <h4 style={{ fontSize: '11px', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0' }}>All Services</h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '8px', gridAutoRows: '85px' }}>
+                            {others.map(renderToolCard)}
+                        </div>
+                    </div>
+                )}
             </div>
         </aside>
     );

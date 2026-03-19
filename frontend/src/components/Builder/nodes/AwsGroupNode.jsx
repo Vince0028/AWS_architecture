@@ -73,7 +73,7 @@ export const AwsGroupNode = ({ data, selected }) => {
                 // Solid Fill Style (Subnet style: simple inner text with icon, no outer tab box)
                 <div className="absolute top-0 left-0 p-2 flex items-center gap-1.5 pointer-events-none w-full">
                     {iconName !== 'none' && <IconData size={14} color={theme.main} strokeWidth={2.5} />}
-                    <span style={{ color: theme.main }} className={`text-xs font-bold font-sans tracking-wide`}>
+                    <span style={{ color: '#16191f' }} className={`text-xs font-bold font-sans tracking-wide`}>
                         {label}
                     </span>
                 </div>
@@ -83,16 +83,20 @@ export const AwsGroupNode = ({ data, selected }) => {
                     style={{ 
                         top: strokeOffset, 
                         left: strokeOffset, 
+                        position: 'absolute',
+                        display: 'flex',
+                        alignItems: 'stretch',
+                        height: '32px',
+                        pointerEvents: 'none'
                     }} 
-                    className={`absolute flex items-stretch h-8 pointer-events-none`}
                 >
                     {/* Icon Square */}
-                    <div style={{ backgroundColor: theme.main }} className={`flex items-center justify-center h-full w-8 shrink-0`}>
-                        {iconName !== 'none' && <IconData size={16} color="#ffffff" strokeWidth={2} />}
+                    <div style={{ backgroundColor: theme.main, display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', height: '32px', width: '32px', flexShrink: 0 }}>
+                        {iconName !== 'none' && <IconData size={18} color="#ffffff" strokeWidth={2} />}
                     </div>
                     {/* Label Area (overlapping the border) */}
-                    <div className="flex items-center justify-center h-full px-2" style={{ backgroundColor: '#ffffff' }}>
-                        <span style={{ color: theme.main, lineHeight: 1 }} className={`text-xs font-bold font-sans tracking-wide`}>
+                    <div style={{ backgroundColor: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '32px', padding: '0 8px' }}>
+                        <span style={{ color: '#16191f', lineHeight: 1, fontSize: '13px', fontWeight: 'bold', fontFamily: 'sans-serif', letterSpacing: '0.025em' }}>
                             {label}
                         </span>
                     </div>
