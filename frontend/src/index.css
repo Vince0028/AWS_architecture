@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body { 
+    font-family: "Amazon Ember", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+    background-color: #f2f3f3; 
+    color: #16191f; 
+    overflow: hidden; 
+  }
+}
+
+@layer components {
+  .aws-header { 
+    @apply bg-[#232f3e] text-white flex items-center px-4 h-14;
+  }
+  .aws-card { 
+    @apply bg-white border border-[#eaeded] rounded p-4 cursor-pointer transition-all duration-100;
+    box-shadow: 0 1px 1px 0 rgba(0,28,36,.03), 0 1px 1px -1px rgba(0,28,36,.05); 
+  }
+  .aws-card:hover { 
+    @apply border-[#0073bb];
+    box-shadow: 0 2px 5px rgba(0,115,187,.2); 
+  }
+  
+  .sidebar { 
+    @apply bg-white border-r border-[#eaeded] w-[250px] shrink-0 overflow-y-auto;
+    height: calc(100vh - 3.5rem); 
+  }
+  .sidebar-item { 
+    @apply px-4 py-2 cursor-pointer text-[#545b64] text-[0.9rem] border-l-4 border-transparent;
+  }
+  .sidebar-item.active { 
+    @apply bg-[#f2f8fd] text-[#0073bb] font-bold border-[#0073bb]; 
+  }
+  .sidebar-item:hover:not(.active) { 
+    @apply bg-[#fafafa] text-[#16191f]; 
+  }
+  
+  .vibe-title { 
+    @apply text-[#d13212] font-bold text-xs uppercase mb-2 block; 
+  }
+  .simple-desc-title { 
+    @apply text-[#00529b] font-bold text-xs uppercase mb-2 block; 
+  }
+  .analogy-box { 
+    @apply bg-[#f1faff] border-l-4 border-[#00a1c9] p-5 my-6; 
+  }
+  .analogy-title { 
+    @apply text-[#0073bb] font-bold text-xs uppercase mb-2 block; 
+  }
+  .fact-text { 
+    @apply text-[#8a94a6] text-xs font-bold uppercase; 
+  }
+  
+  .playbook-tab { 
+    @apply px-4 py-2 cursor-pointer border-none bg-transparent text-[#545b64] text-[0.85rem] font-semibold border-b-[3px] border-transparent;
+    font-family: inherit;
+  }
+  .playbook-tab.active { 
+    @apply text-[#0073bb] border-[#0073bb]; 
+  }
+  .playbook-tab:hover:not(.active) { 
+    @apply text-[#16191f]; 
+  }
+  
+  .setup-step { 
+    @apply flex gap-3 items-start py-3 border-b border-[#eaeded]; 
+  }
+  .setup-step:last-child { 
+    @apply border-none; 
+  }
+  .step-num { 
+    @apply w-7 h-7 rounded-full bg-[#0073bb] text-white flex items-center justify-center text-xs font-bold shrink-0; 
+  }
+  
+  .conn-row { 
+    @apply grid items-center gap-2 py-2 px-3 rounded transition-colors duration-100 cursor-pointer;
+    grid-template-columns: 90px 24px 130px 1fr; 
+  }
+  .conn-row:hover { 
+    @apply bg-[#f2f8fd]; 
+  }
+  
+  .cat-badge { 
+    @apply px-2 py-0.5 rounded text-[0.65rem] font-bold uppercase bg-[#f2f3f3] text-[#545b64] border border-[#eaeded]; 
+  }
+  
+  .pipeline-card { 
+    @apply bg-[#fafafa] border border-[#eaeded] rounded p-4 mb-3; 
+  }
+  .pipeline-flow { 
+    @apply flex items-center gap-1.5 overflow-x-auto py-2; 
+  }
+  .pill { 
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[0.78rem] font-semibold whitespace-nowrap shrink-0 bg-white border border-[#eaeded] text-[#16191f]; 
+  }
+  .pill-arrow { 
+    @apply text-[#aab7b8] text-base shrink-0; 
+  }
+  
+  .modal-overlay { 
+    @apply fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40; 
+  }
+  .modal-content { 
+    @apply bg-white rounded-lg shadow-2xl w-full max-w-3xl h-[80vh] overflow-hidden flex flex-col border border-[#eaeded]; 
+  }
+}

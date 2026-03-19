@@ -1,0 +1,302 @@
+amazonathena: Amazon Athena
+amazoncloudsearch: Amazon CloudSearch
+amazondatafirehose: Amazon Data Firehose
+amazondatazone: Amazon DataZone
+amazonemr: Amazon EMR
+amazonfinspace: Amazon FinSpace
+amazonkinesisdatastreams: Amazon Kinesis Data Streams
+amazonkinesisvideostreams: Amazon Kinesis Video Streams
+amazonkinesis: Amazon Kinesis
+amazonmanagedserviceforapacheflink: Amazon Managed Service for Apache Flink
+amazonmanagedstreamingforapachekafka: Amazon Managed Streaming for Apache Kafka
+amazonopensearchservice: Amazon OpenSearch Service
+amazonredshift: Amazon Redshift
+amazonsagemaker: Amazon SageMaker
+awscleanrooms: AWS Clean Rooms
+awsdataexchange: AWS Data Exchange
+awsentityresolution: AWS Entity Resolution
+awsgluedatabrew: AWS Glue DataBrew
+awsglue: AWS Glue
+awslakeformation: AWS Lake Formation
+amazonappflow: Amazon AppFlow
+amazoneventbridge: Amazon EventBridge
+amazonmanagedworkflowsforapacheairflow: Amazon Managed Workflows for Apache Airflow
+amazonmq: Amazon MQ
+amazonsimplenotificationservice: Amazon Simple Notification Service
+amazonsimplequeueservice: Amazon Simple Queue Service
+awsappsync: AWS AppSync
+awsb2bdatainterchange: AWS B2B Data Interchange
+awsexpressworkflows: AWS Express Workflows
+awsstepfunctions: AWS Step Functions
+amazonaugmentedaia2i: Amazon Augmented AI A2I
+amazonbedrockagentcore: Amazon Bedrock AgentCore
+amazonbedrock: Amazon Bedrock
+amazoncodeguru: Amazon CodeGuru
+amazoncodewhisperer: Amazon CodeWhisperer
+amazoncomprehendmedical: Amazon Comprehend Medical
+amazoncomprehend: Amazon Comprehend
+amazondevopsguru: Amazon DevOps Guru
+amazonelasticinference: Amazon Elastic Inference
+amazonforecast: Amazon Forecast
+amazonfrauddetector: Amazon Fraud Detector
+amazonkendra: Amazon Kendra
+amazonlex: Amazon Lex
+amazonlookoutforequipment: Amazon Lookout for Equipment
+amazonlookoutforvision: Amazon Lookout for Vision
+amazonmonitron: Amazon Monitron
+amazonnova: Amazon Nova
+amazonpersonalize: Amazon Personalize
+amazonpolly: Amazon Polly
+amazonq: Amazon Q
+amazonrekognition: Amazon Rekognition
+amazonsagemakerai: Amazon SageMaker AI
+amazonsagemakergroundtruth: Amazon SageMaker Ground Truth
+amazonsagemakerstudiolab: Amazon SageMaker Studio Lab
+amazontextract: Amazon Textract
+amazontranscribe: Amazon Transcribe
+amazontranslate: Amazon Translate
+apachemxnetonaws: Apache MXNet on AWS
+awsappstudio: AWS App Studio
+awsdeeplearningamis: AWS Deep Learning AMIs
+awsdeeplearningcontainers: AWS Deep Learning Containers
+awsdeepracer: AWS DeepRacer
+awshealthimaging: AWS HealthImaging
+awshealthlake: AWS HealthLake
+awshealthomics: AWS HealthOmics
+awshealthscribe: AWS HealthScribe
+awsneuron: AWS Neuron
+awspanorama: AWS Panorama
+pytorchonaws: PyTorch on AWS
+tensorflowonaws: TensorFlow on AWS
+amazonmanagedblockchain: Amazon Managed Blockchain
+amazonchimesdk: Amazon Chime SDK
+amazonchime: Amazon Chime
+amazonconnect: Amazon Connect
+amazonpinpointapis: Amazon Pinpoint APIs
+amazonpinpoint: Amazon Pinpoint
+amazonquicksuite: Amazon Quick Suite
+amazonsimpleemailservice: Amazon Simple Email Service
+amazonworkdocssdk: Amazon WorkDocs SDK
+amazonworkdocs: Amazon WorkDocs
+amazonworkmail: Amazon WorkMail
+awsappfabric: AWS AppFabric
+awsendusermessaging: AWS End User Messaging
+awssupplychain: AWS Supply Chain
+awswickr: AWS Wickr
+awsbillingconductor: AWS Billing Conductor
+awsbudgets: AWS Budgets
+awscostandusagereport: AWS Cost and Usage Report
+awscostexplorer: AWS Cost Explorer
+reservedinstancereporting: Reserved Instance Reporting
+savingsplans: Savings Plans
+amazondcv: Amazon DCV
+amazonec2autoscaling: Amazon EC2 Auto Scaling
+amazonec2imagebuilder: Amazon EC2 Image Builder
+amazonec2: Amazon EC2
+amazonelasticvmwareservice: Amazon Elastic VMware Service
+amazonlightsailforresearch: Amazon Lightsail for Research
+amazonlightsail: Amazon Lightsail
+awsapprunner: AWS App Runner
+awsbatch: AWS Batch
+awscomputeoptimizer: AWS Compute Optimizer
+awselasticbeanstalk: AWS Elastic Beanstalk
+awslambda: AWS Lambda
+awslocalzones: AWS Local Zones
+awsnitroenclaves: AWS Nitro Enclaves
+awsoutpostsfamily: AWS Outposts family
+awsoutpostsrack: AWS Outposts rack
+awsoutpostsservers: AWS Outposts servers
+awsparallelcluster: AWS Parallel Cluster
+awsparallelcomputingservice: AWS Parallel Computing Service
+awsserverlessapplicationrepository: AWS Serverless Application Repository
+awssimspaceweaver: AWS SimSpace Weaver
+awswavelength: AWS Wavelength
+bottlerocket: Bottlerocket
+elasticfabricadapter: Elastic Fabric Adapter
+amazonecsanywhere: Amazon ECS Anywhere
+amazoneksanywhere: Amazon EKS Anywhere
+amazoneksdistro: Amazon EKS Distro
+amazonelasticcontainerregistry: Amazon Elastic Container Registry
+amazonelasticcontainerservice: Amazon Elastic Container Service
+amazonelastickubernetesservice: Amazon Elastic Kubernetes Service
+awsfargate: AWS Fargate
+redhatopenshiftserviceonaws: Red Hat OpenShift Service on AWS
+awsactivate: AWS Activate
+awsiq: AWS IQ
+awsmanagedservices: AWS Managed Services
+awsprofessionalservices: AWS Professional Services
+awsrepostprivate: AWS rePost Private
+awsrepost: AWS rePost
+awssupport: AWS Support
+awstrainingcertification: AWS Training Certification
+amazonaurora: Amazon Aurora
+amazondocumentdb: Amazon DocumentDB
+amazondynamodb: Amazon DynamoDB
+amazonelasticache: Amazon ElastiCache
+amazonkeyspaces: Amazon Keyspaces
+amazonmemorydb: Amazon MemoryDB
+amazonneptune: Amazon Neptune
+amazonrds: Amazon RDS
+amazontimestream: Amazon Timestream
+awsdatabasemigrationservice: AWS Database Migration Service
+oracledatabaseataws: Oracle Database at AWS
+amazoncodecatalyst: Amazon CodeCatalyst
+amazoncorretto: Amazon Corretto
+awscloudcontrolapi: AWS Cloud Control API
+awsclouddevelopmentkit: AWS Cloud Development Kit
+awscloud9: AWS Cloud9
+awscloudshell: AWS CloudShell
+awscodeartifact: AWS CodeArtifact
+awscodebuild: AWS CodeBuild
+awscodecommit: AWS CodeCommit
+awscodedeploy: AWS CodeDeploy
+awscodepipeline: AWS CodePipeline
+awscommandlineinterface: AWS Command Line Interface
+awsfaultinjectionservice: AWS Fault Injection Service
+awsinfrastructurecomposer: AWS Infrastructure Composer
+awstoolsandsdks: AWS Tools and SDKs
+awsxray: AWS X Ray
+amazonworkspaces: Amazon WorkSpaces
+amazonlocationservice: Amazon Location Service
+awsamplify: AWS Amplify
+awsdevicefarm: AWS Device Farm
+amazongameliftservers: Amazon GameLift Servers
+amazongameliftstreams: Amazon GameLift Streams
+open3dengine: Open 3D Engine
+awsmarketplacedark: AWS Marketplace_Dark
+awsmarketplacelight: AWS Marketplace_Light
+awsiotcore: AWS IoT Core
+awsiotdevicedefender: AWS IoT Device Defender
+awsiotdevicemanagement: AWS IoT Device Management
+awsiotevents: AWS IoT Events
+awsiotexpresslink: AWS IoT ExpressLink
+awsiotfleetwise: AWS IoT FleetWise
+awsiotgreengrass: AWS IoT Greengrass
+awsiotsitewise: AWS IoT SiteWise
+awsiottwinmaker: AWS IoT TwinMaker
+freertos: FreeRTOS
+amazoncloudwatch: Amazon CloudWatch
+amazonmanagedgrafana: Amazon Managed Grafana
+amazonmanagedserviceforprometheus: Amazon Managed Service for Prometheus
+awsappconfig: AWS AppConfig
+awsapplicationautoscaling: AWS Application Auto Scaling
+awsautoscaling: AWS Auto Scaling
+awsbackintagent: AWS Backint Agent
+awschatbot: AWS Chatbot
+awscloudformation: AWS CloudFormation
+awscloudtrail: AWS CloudTrail
+awscomputeoptimizer: AWS Compute Optimizer
+awsconfig: AWS Config
+awsconsolemobileapplication: AWS Console Mobile Application
+awscontroltower: AWS Control Tower
+awsdevopsagent: AWS DevOps Agent
+awsdistroforopentelemetry: AWS Distro for OpenTelemetry
+awshealthdashboard: AWS Health Dashboard
+awslaunchwizard: AWS Launch Wizard
+awslicensemanager: AWS License Manager
+awsmanagementconsole: AWS Management Console
+awsorganizations: AWS Organizations
+awspartnercentral: AWS Partner Central
+awsproton: AWS Proton
+awsresiliencehub: AWS Resilience Hub
+awsresourceexplorer: AWS Resource Explorer
+awsservicecatalog: AWS Service Catalog
+awsservicemanagementconnector: AWS Service Management Connector
+awssystemsmanager: AWS Systems Manager
+awstelconetworkbuilder: AWS Telco Network Builder
+awstrustedadvisor: AWS Trusted Advisor
+awsusernotifications: AWS User Notifications
+awswellarchitectedtool: AWS Well Architected Tool
+amazoninteractivevideoservice: Amazon Interactive Video Service
+amazonkinesisvideostreams: Amazon Kinesis Video Streams
+awsdeadlinecloud: AWS Deadline Cloud
+awselementalappliancessoftware: AWS Elemental Appliances & Software
+awselementalconductor: AWS Elemental Conductor
+awselementaldelta: AWS Elemental Delta
+awselementallink: AWS Elemental Link
+awselementallive: AWS Elemental Live
+awselementalmediaconnect: AWS Elemental MediaConnect
+awselementalmediaconvert: AWS Elemental MediaConvert
+awselementalmedialive: AWS Elemental MediaLive
+awselementalmediapackage: AWS Elemental MediaPackage
+awselementalmediastore: AWS Elemental MediaStore
+awselementalmediatailor: AWS Elemental MediaTailor
+awselementalserver: AWS Elemental Server
+awsthinkboxdeadline: AWS Thinkbox Deadline
+awsthinkboxfrost: AWS Thinkbox Frost
+awsthinkboxkrakatoa: AWS Thinkbox Krakatoa
+awsthinkboxstoke: AWS Thinkbox Stoke
+awsthinkboxxmesh: AWS Thinkbox XMesh
+awsapplicationdiscoveryservice: AWS Application Discovery Service
+awsapplicationmigrationservice: AWS Application Migration Service
+awsdatatransferterminal: AWS Data Transfer Terminal
+awsdatasync: AWS DataSync
+awsmainframemodernization: AWS Mainframe Modernization
+awsmigrationevaluator: AWS Migration Evaluator
+awsmigrationhub: AWS Migration Hub
+awstransferfamily: AWS Transfer Family
+awstransform: AWS Transform
+amazonapigateway: Amazon API Gateway
+amazonapplicationrecoverycontroller: Amazon Application Recovery Controller
+amazoncloudfront: Amazon CloudFront
+amazonroute53: Amazon Route 53
+amazonvirtualprivatecloud: Amazon Virtual Private Cloud
+amazonvpclattice: Amazon VPC Lattice
+awsappmesh: AWS App Mesh
+awsclientvpn: AWS Client VPN
+awscloudmap: AWS Cloud Map
+awscloudwan: AWS Cloud WAN
+awsdirectconnect: AWS Direct Connect
+awsglobalaccelerator: AWS Global Accelerator
+awsprivatelink: AWS PrivateLink
+awsrtbfabric: AWS RTB Fabric
+awssitetositevpn: AWS Site to Site VPN
+awstransitgateway: AWS Transit Gateway
+awsverifiedaccess: AWS Verified Access
+elasticloadbalancing: Elastic Load Balancing
+amazonbraket: Amazon Braket
+awsgroundstation: AWS Ground Station
+amazonclouddirectory: Amazon Cloud Directory
+amazoncognito: Amazon Cognito
+amazondetective: Amazon Detective
+amazonguardduty: Amazon GuardDuty
+amazoninspector: Amazon Inspector
+amazonmacie: Amazon Macie
+amazonsecuritylake: Amazon Security Lake
+amazonverifiedpermissions: Amazon Verified Permissions
+awsartifact: AWS Artifact
+awsauditmanager: AWS Audit Manager
+awscertificatemanager: AWS Certificate Manager
+awscloudhsm: AWS CloudHSM
+awsdirectoryservice: AWS Directory Service
+awsfirewallmanager: AWS Firewall Manager
+awsiamidentitycenter: AWS IAM Identity Center
+awsidentityandaccessmanagement: AWS Identity and Access Management
+awskeymanagementservice: AWS Key Management Service
+awsnetworkfirewall: AWS Network Firewall
+awspaymentcryptography: AWS Payment Cryptography
+awsprivatecertificateauthority: AWS Private Certificate Authority
+awsresourceaccessmanager: AWS Resource Access Manager
+awssecretsmanager: AWS Secrets Manager
+awssecurityagent: AWS Security Agent
+awssecurityhub: AWS Security Hub
+awssecurityincidentresponse: AWS Security Incident Response
+awsshield: AWS Shield
+awssigner: AWS Signer
+awswaf: AWS WAF
+amazonefs: Amazon EFS
+amazonelasticblockstore: Amazon Elastic Block Store
+amazonfilecache: Amazon File Cache
+amazonfsxforlustre: Amazon FSx for Lustre
+amazonfsxfornetappontap: Amazon FSx for NetApp ONTAP
+amazonfsxforopenzfs: Amazon FSx for OpenZFS
+amazonfsxforwfs: Amazon FSx for WFS
+amazonfsx: Amazon FSx
+amazons3onoutposts: Amazon S3 on Outposts
+amazonsimplestorageserviceglacier: Amazon Simple Storage Service Glacier
+amazonsimplestorageservice: Amazon Simple Storage Service
+awsbackup: AWS Backup
+awselasticdisasterrecovery: AWS Elastic Disaster Recovery
+awssnowballedge: AWS Snowball Edge
+awssnowball: AWS Snowball
+awsstoragegateway: AWS Storage Gateway
