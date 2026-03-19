@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Users, Folder, FileText } from 'lucide-react';
+import { User, Users, Folder, FileText, Type } from 'lucide-react';
 
 export const ToolSidebar = ({ allTools }) => {
     const [search, setSearch] = useState("");
@@ -117,6 +117,22 @@ export const ToolSidebar = ({ allTools }) => {
             
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 
+                <div style={{ marginBottom: '16px' }}>
+                    <h4 style={{ fontSize: '11px', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0' }}>Annotations & Text</h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px' }}>
+                        <div 
+                            draggable 
+                            onDragStart={(e) => { e.dataTransfer.setData('application/reactflow', JSON.stringify({ type: 'textNode' })); e.dataTransfer.effectAllowed = 'move'; }} 
+                            style={{ border: '1px solid #d1d5db', borderRadius: '6px', backgroundColor: 'white', padding: '12px 8px', cursor: 'grab', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', boxSizing: 'border-box', color: '#4b5563', transition: 'all 0.15s ease' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.backgroundColor = '#eff6ff'; e.currentTarget.style.color = '#1d4ed8'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#d1d5db'; e.currentTarget.style.backgroundColor = 'white'; e.currentTarget.style.color = '#4b5563'; }}
+                        >
+                            <Type size={24} strokeWidth={1.5} color="currentColor" />
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: 'inherit', textAlign: 'center' }}>Freeform Text</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div style={{ marginBottom: '16px' }}>
                     <h4 style={{ fontSize: '11px', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0' }}>Structural Shapes</h4>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>

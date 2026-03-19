@@ -15,11 +15,12 @@ import { AwsResourceNode } from './nodes/AwsResourceNode';
 import { AwsGroupNode } from './nodes/AwsGroupNode';
 import { StepBubbleNode } from './nodes/StepBubbleNode';
 import { ShapeNode } from './nodes/ShapeNode';
+import { TextNode } from './nodes/TextNode';
 import { EditableEdge } from './edges/EditableEdge';
 
 import { MousePointer2, Hand, Trash2 } from 'lucide-react';
 
-const nodeTypes = { awsNode: AwsResourceNode, awsGroup: AwsGroupNode, stepBubble: StepBubbleNode, shapeNode: ShapeNode };
+const nodeTypes = { awsNode: AwsResourceNode, awsGroup: AwsGroupNode, stepBubble: StepBubbleNode, shapeNode: ShapeNode, textNode: TextNode };
 const edgeTypes = { smoothstep: EditableEdge, editable: EditableEdge };
 
 export const DiagramCanvas = ({ allTools }) => {
@@ -423,6 +424,17 @@ export const DiagramCanvas = ({ allTools }) => {
                         shapeType: dropData.shapeType, 
                         label: shapeMap[dropData.shapeType] || 'Label'
                     },
+                    parentId: parentNodeId,
+                    extent: parentNodeId ? 'parent' : undefined
+                };
+                setNodes((nds) => nds.concat(newNode));
+            }
+            else if (dropData.type === 'textNode') {
+                const newNode = {
+                    id: `text_${Date.now()}`,
+                    type: 'textNode',
+                    position,
+                    data: { text: 'Double click to edit...', fontSize: '14px', color: '#16191f' },
                     parentId: parentNodeId,
                     extent: parentNodeId ? 'parent' : undefined
                 };
