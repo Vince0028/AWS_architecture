@@ -130,9 +130,40 @@ const exportToPuml = (nodes, edges) => {
       return res;
   };
 
+  // Group root-level nodes by similar Y positions into 'together' blocks
+  // This keeps horizontally-adjacent groups side-by-side in the PUML output
   if (childrenMap['root']) {
-      childrenMap['root'].forEach(node => {
-          puml += generateNodePuml(node, 0);
+      const rootNodes = childrenMap['root'];
+      const yThreshold = 150; // nodes within 150px of each other vertically are "same row"
+      const rows = [];
+      const used = new Set();
+
+      rootNodes.forEach(node => {
+          if (used.has(node.id)) return;
+          const row = [node];
+          used.add(node.id);
+          rootNodes.forEach(other => {
+              if (used.has(other.id)) return;
+              if (Math.abs(node.absY - other.absY) < yThreshold) {
+                  row.push(other);
+                  used.add(other.id);
+              }
+          });
+          rows.push(row);
+      });
+
+      rows.forEach(row => {
+          // Sort by X within each row so left-most comes first
+          row.sort((a, b) => a.absX - b.absX);
+          if (row.length > 1) {
+              puml += "together {\n";
+              row.forEach(node => {
+                  puml += generateNodePuml(node, 1);
+              });
+              puml += "}\n";
+          } else {
+              puml += generateNodePuml(row[0], 0);
+          }
       });
   }
 
@@ -144,16 +175,22 @@ const exportToPuml = (nodes, edges) => {
     const sourceId = edge.source.replace(/-/g, '_');
     const targetId = edge.target.replace(/-/g, '_');
 
-    let dir = "down";
+    // In "left to right direction" mode:
+    //   default arrow (-->) = goes RIGHT visually
+    //   -down->  = goes DOWN visually
+    //   -up->    = goes UP visually  
+    //   -right-> = goes DOWN visually (secondary axis)
+    //   -left->  = goes UP visually (secondary axis)
+    let dir = "";
     if (sourceNode && targetNode) {
         const dx = targetNode.absX - sourceNode.absX;
         const dy = targetNode.absY - sourceNode.absY;
         if (Math.abs(dx) > Math.abs(dy)) {
-              // In left-to-right, to go visual right, you use standard down arrows
-              dir = dx > 0 ? "down" : "up"; 
+              // Primarily horizontal: default arrow goes right in LTR
+              dir = dx > 0 ? "" : "left"; 
           } else {
-              // Vertical movement becomes right/left in left-to-right mode
-              dir = dy > 0 ? "right" : "left";
+              // Primarily vertical: down/up
+              dir = dy > 0 ? "down" : "up";
           }
     }
 
@@ -162,14 +199,15 @@ const exportToPuml = (nodes, edges) => {
     const isDashed = edge.style?.strokeDasharray && edge.style.strokeDasharray !== "none";
     const dash = isDashed ? "." : "-";
 
-    let arrow = `${dash}${dir}${dash}>`;
+    const dirStr = dir ? `${dir}` : "";
+    let arrow = `${dash}${dirStr}${dash}>`;
     
     if (hasMarkerStart && hasMarkerEnd) {
-        arrow = `<${dash}${dir}${dash}>`;
+        arrow = `<${dash}${dirStr}${dash}>`;
     } else if (hasMarkerStart && !hasMarkerEnd) {
-        arrow = `<${dash}${dir}${dash}`;
+        arrow = `<${dash}${dirStr}${dash}`;
     } else if (!hasMarkerStart && !hasMarkerEnd) {
-        arrow = `${dash}${dir}${dash}`;
+        arrow = `${dash}${dirStr}${dash}`;
     }
 
     puml += `${sourceId} ${arrow} ${targetId}\n`;
