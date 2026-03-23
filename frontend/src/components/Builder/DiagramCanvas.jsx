@@ -18,14 +18,171 @@ import { ShapeNode } from './nodes/ShapeNode';
 import { TextNode } from './nodes/TextNode';
 import { EditableEdge } from './edges/EditableEdge';
 
-import { MousePointer2, Hand, Trash2 } from 'lucide-react';
+import { MousePointer2, Hand, Trash2, Download } from 'lucide-react';
 
 const nodeTypes = { awsNode: AwsResourceNode, awsGroup: AwsGroupNode, stepBubble: StepBubbleNode, shapeNode: ShapeNode, textNode: TextNode };
 const edgeTypes = { smoothstep: EditableEdge, editable: EditableEdge };
 
+
+const exportToPuml = (nodes, edges) => {
+  let puml = "@startuml\n";
+    puml += "left to right direction\n";
+  puml += "skinparam linetype ortho\n";
+  puml += "skinparam nodesep 100\n";
+  puml += "skinparam ranksep 100\n";
+  puml += "hide stereotype\n";
+  puml += "skinparam rectangle {\n    BackgroundColor #ffffff\n    BorderColor #232f3e\n    BorderThickness 2\n    FontStyle bold\n}\n";
+  puml += "skinparam rectangle<<region>> {\n    BackgroundColor transparent\n    BorderColor #232f3e\n    BorderThickness 2\n}\n";
+  puml += "skinparam rectangle<<vpc>> {\n    BorderColor #16a34a\n}\n";
+  puml += "skinparam rectangle<<subnet_public>> {\n    BorderColor #2563eb\n}\n";
+  puml += "skinparam rectangle<<subnet_private>> {\n    BorderColor #64748b\n}\n";
+  puml += "skinparam component {\n    BackgroundColor white\n    BorderColor #f97316\n    BorderThickness 1\n}\n\n";
+
+  const getAbs = (nId) => {
+      let n = nodes.find(x => x.id === nId);
+      if (!n) return { x: 0, y: 0 };
+      
+      let x = n.position.x;
+      let y = n.position.y;
+      let parentId = n.parentId;
+      
+      while (parentId) {
+          const p = nodes.find(x => x.id === parentId);
+          if (p) {
+              x += p.position.x;
+              y += p.position.y;
+              parentId = p.parentId;
+          } else {
+              break;
+          }
+      }
+      return { x, y };
+  };
+
+  const absNodes = nodes.map(n => {
+      // We must exclusively use the calculated recursive fallbackPos 
+      // because React Flow's n.positionAbsolute gets stale for nested children
+      const fallbackPos = getAbs(n.id);
+      const absX = fallbackPos.x;
+      const absY = fallbackPos.y;
+      const w = (n.measured?.width || n.width || parseInt(n.style?.width, 10)) || 100;
+      const h = (n.measured?.height || n.height || parseInt(n.style?.height, 10)) || 100;
+      return { ...n, absX, absY, w, h };
+  });
+
+  const iconMap = {};
+  absNodes.forEach(n => {
+      if (n.type === 'awsNode' && n.data.icon) {
+          const pngPath = n.data.icon.replace('.svg', '.png');
+          iconMap[n.id] = `${window.location.origin}/${pngPath}`;
+      }
+  });
+
+  const childrenMap = {};
+  absNodes.forEach(n => {
+      const parentAssigned = n.parentId || 'root';
+      if (!childrenMap[parentAssigned]) childrenMap[parentAssigned] = [];
+      childrenMap[parentAssigned].push(n);
+  });
+
+  Object.keys(childrenMap).forEach(key => {
+        childrenMap[key].sort((a, b) => a.absX - b.absX);
+    });
+
+    
+
+  const generateNodePuml = (node, indentLevel) => {
+      const indent = "  ".repeat(indentLevel);
+      const nodeId = node.id.replace(/-/g, '_');
+      let res = "";
+      
+      if (node.type === 'awsGroup') {
+          const type = node.data.groupType || 'custom';
+          const fallback = type === 'custom' ? 'Group' : type.replace('-', ' ').toUpperCase();
+          const label = node.data.label || fallback;
+
+          let stereotype = "";
+          if (type === 'region') stereotype = "<<region>>";
+          else if (type === 'vpc') stereotype = "<<vpc>>";
+          else if (type === 'subnet-public') stereotype = "<<subnet_public>>";
+          else if (type === 'subnet-private') stereotype = "<<subnet_private>>";
+          
+          res += `${indent}rectangle "${label}" ${stereotype} as ${nodeId} {\n`;
+          if (childrenMap[node.id]) {
+              childrenMap[node.id].forEach(child => {
+                  res += generateNodePuml(child, indentLevel + 1);
+              });
+          }
+          res += `${indent}}\n`;
+      } else if (node.type === 'awsNode') {
+          let label = node.data.label;
+          if (iconMap[node.id]) {
+              label = `<img:${iconMap[node.id]}{scale=0.5}>\\n${label}`;
+          }
+          res += `${indent}component "${label}" as ${nodeId}\n`;
+      } else if (node.type === 'textNode') {
+          res += `${indent}node "${(node.data.text || '').replace(/"/g, "'")}" as ${nodeId}\n`;
+      } else if (node.type === 'shapeNode') {
+          res += `${indent}component "${node.data.label}" as ${nodeId}\n`;
+      } else if (node.type === 'stepBubble') {
+          res += `${indent}queue "Step ${node.data.step}" as ${nodeId}\n`;
+      }
+      return res;
+  };
+
+  if (childrenMap['root']) {
+      childrenMap['root'].forEach(node => {
+          puml += generateNodePuml(node, 0);
+      });
+  }
+
+  puml += "\n";
+
+    edges.forEach(edge => {
+    const sourceNode = absNodes.find(n => n.id === edge.source);
+    const targetNode = absNodes.find(n => n.id === edge.target);
+    const sourceId = edge.source.replace(/-/g, '_');
+    const targetId = edge.target.replace(/-/g, '_');
+
+    let dir = "down";
+    if (sourceNode && targetNode) {
+        const dx = targetNode.absX - sourceNode.absX;
+        const dy = targetNode.absY - sourceNode.absY;
+        if (Math.abs(dx) > Math.abs(dy)) {
+              // In left-to-right, to go visual right, you use standard down arrows
+              dir = dx > 0 ? "down" : "up"; 
+          } else {
+              // Vertical movement becomes right/left in left-to-right mode
+              dir = dy > 0 ? "right" : "left";
+          }
+    }
+
+    const hasMarkerStart = !!edge.markerStart;
+    const hasMarkerEnd = !!edge.markerEnd;
+    const isDashed = edge.style?.strokeDasharray && edge.style.strokeDasharray !== "none";
+    const dash = isDashed ? "." : "-";
+
+    let arrow = `${dash}${dir}${dash}>`;
+    
+    if (hasMarkerStart && hasMarkerEnd) {
+        arrow = `<${dash}${dir}${dash}>`;
+    } else if (hasMarkerStart && !hasMarkerEnd) {
+        arrow = `<${dash}${dir}${dash}`;
+    } else if (!hasMarkerStart && !hasMarkerEnd) {
+        arrow = `${dash}${dir}${dash}`;
+    }
+
+    puml += `${sourceId} ${arrow} ${targetId}\n`;
+  });
+
+  puml += "@enduml";
+  console.log(puml); return puml;
+};
+
+
 export const DiagramCanvas = ({ allTools }) => {
     const reactFlowWrapper = useRef(null);
-    const { screenToFlowPosition, getNodes } = useReactFlow();
+    const { screenToFlowPosition, getNodes, getEdges } = useReactFlow();
     const { x: viewportX, y: viewportY, zoom } = useViewport();
 
     const [helperLines, setHelperLines] = useState({ horizontal: null, vertical: null });
@@ -578,6 +735,25 @@ export const DiagramCanvas = ({ allTools }) => {
                     <span className="text-xs font-bold text-inherit">Hand</span>
                 </button>
                 <div className="w-px bg-gray-300 mx-1"></div>
+                <button 
+                    onClick={() => {
+                        const pumlContent = exportToPuml(getNodes(), getEdges());
+                        const blob = new Blob([pumlContent], { type: "text/plain" });
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement("a");
+                        link.href = url;
+                        link.download = "architecture.puml";
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                    }} 
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-md transition-colors text-gray-500 hover:bg-gray-100`}
+                    title="Export to PUML"
+                >
+                    <Download size={16} />
+                    <span className="text-xs font-bold text-inherit">Export</span>
+                </button>
                 <button 
                     onClick={() => {
                         if (window.confirm('Are you sure you want to clear your entire architecture?')) {

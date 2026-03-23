@@ -1,0 +1,49 @@
+@startuml
+left to right direction
+skinparam linetype ortho
+skinparam nodesep 100
+skinparam ranksep 100
+hide stereotype
+skinparam rectangle {
+    BackgroundColor #ffffff
+    BorderColor #232f3e
+    BorderThickness 2
+    FontStyle bold
+}
+skinparam rectangle<<region>> {
+    BackgroundColor transparent
+    BorderColor #232f3e
+    BorderThickness 2
+}
+skinparam rectangle<<vpc>> {
+    BorderColor #16a34a
+}
+skinparam rectangle<<subnet_public>> {
+    BorderColor #2563eb
+}
+skinparam rectangle<<subnet_private>> {
+    BorderColor #64748b
+}
+skinparam component {
+    BackgroundColor white
+    BorderColor #f97316
+    BorderThickness 1
+}
+
+rectangle "REGION" <<region>> as group_1774175460232 {
+  rectangle "SUBNET PRIVATE" <<subnet_private>> as group_1774175468114 {
+    component "<img:frontend/public/icons/Architecture-Service-Icons_01302026/Arch_Compute/64/Arch_Amazon-EC2_64.png{scale=0.5}>\nAmazon EC2" as node_1774175488581
+    component "<img:frontend/public/icons/Architecture-Service-Icons_01302026/Arch_Networking-Content-Delivery/64/Arch_Amazon-Route-53_64.png{scale=0.5}>\nAmazon Route 53" as node_1774175495712
+  }
+  rectangle "VPC" <<vpc>> as group_1774186267494 {
+    component "<img:frontend/public/icons/Architecture-Service-Icons_01302026/Arch_Networking-Content-Delivery/64/Arch_Amazon-API-Gateway_64.png{scale=0.5}>\nAmazon API Gateway" as node_1774186274010
+  }
+  rectangle "SUBNET PUBLIC" <<subnet_public>> as group_1774175600863 {
+    component "<img:frontend/public/icons/Architecture-Service-Icons_01302026/Arch_Databases/64/Arch_Amazon-RDS_64.png{scale=0.5}>\nAmazon RDS" as node_1774175632471
+  }
+}
+
+node_1774175488581 -down-> node_1774175495712
+node_1774186274010 -down-> node_1774175632471
+node_1774175495712 -down-> node_1774186274010
+@enduml
