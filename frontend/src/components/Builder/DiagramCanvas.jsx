@@ -532,12 +532,17 @@ export const DiagramCanvas = ({ allTools }) => {
 
             if (dropData.type === 'awsNode') {
                 const tool = allTools.find(t => t.id === dropData.toolId);
-                if (!tool) return;
+                const genericItem = dropData.genericItem;
+                if (!tool && !genericItem) return;
                 const newNode = {
                     id: `node_${Date.now()}`,
                     type: 'awsNode',
                     position,
-                    data: { label: tool.name, icon: tool.icon, toolInfo: tool },
+                    data: { 
+                        label: tool ? tool.name : genericItem.name, 
+                        icon: tool ? tool.icon : genericItem.icon, 
+                        toolInfo: tool || null 
+                    },
                     parentId: parentNodeId,
                     extent: parentNodeId ? 'parent' : undefined
                 };
@@ -709,6 +714,7 @@ export const DiagramCanvas = ({ allTools }) => {
                 edgeTypes={edgeTypes}
                 fitView
                 defaultEdgeOptions={{ type: 'editable' }}
+                connectionMode="loose"
                 className="bg-[#f2f3f3]"
             >
                 <Background color="#cbd5e1" gap={20} size={1.5} />

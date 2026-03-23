@@ -1,5 +1,5 @@
 import React from 'react';
-import { NodeResizer } from '@xyflow/react';
+import { NodeResizer, Handle, Position } from '@xyflow/react';
 import { Cloud, Lock, Shield, Server, Box, Globe, Grid } from 'lucide-react';
 
 const ICON_MAP = {
@@ -55,13 +55,29 @@ export const AwsGroupNode = ({ data, selected }) => {
         borderColor: theme.main,
         backgroundColor: isSolid ? theme.bg : 'transparent',
         boxShadow: selected ? `0 0 0 4px rgba(59, 130, 246, 0.3)` : 'none',
-        pointerEvents: 'all' // important for React Flow custom bounds
     };
 
     const strokeOffset = typeof data.borderWidth !== 'undefined' ? `-${data.borderWidth}px` : '-2px';
 
     return (
         <div style={containerStyles} className="relative group rounded-sm">
+            {/* Connection handles — 3 per side at 25%, 50%, 75% for flexible angles */}
+            {/* Top side */}
+            <Handle type="source" position={Position.Top} id="top-1" style={{ background: '#64748b', width: 10, height: 10, border: '2px solid white', borderRadius: '50%', top: -6, left: '25%', zIndex: 50, cursor: 'crosshair' }} />
+            <Handle type="source" position={Position.Top} id="top-2" style={{ background: '#64748b', width: 10, height: 10, border: '2px solid white', borderRadius: '50%', top: -6, left: '50%', zIndex: 50, cursor: 'crosshair' }} />
+            <Handle type="source" position={Position.Top} id="top-3" style={{ background: '#64748b', width: 10, height: 10, border: '2px solid white', borderRadius: '50%', top: -6, left: '75%', zIndex: 50, cursor: 'crosshair' }} />
+            {/* Bottom side */}
+            <Handle type="source" position={Position.Bottom} id="bottom-1" style={{ background: '#64748b', width: 10, height: 10, border: '2px solid white', borderRadius: '50%', bottom: -6, left: '25%', zIndex: 50, cursor: 'crosshair' }} />
+            <Handle type="source" position={Position.Bottom} id="bottom-2" style={{ background: '#64748b', width: 10, height: 10, border: '2px solid white', borderRadius: '50%', bottom: -6, left: '50%', zIndex: 50, cursor: 'crosshair' }} />
+            <Handle type="source" position={Position.Bottom} id="bottom-3" style={{ background: '#64748b', width: 10, height: 10, border: '2px solid white', borderRadius: '50%', bottom: -6, left: '75%', zIndex: 50, cursor: 'crosshair' }} />
+            {/* Left side */}
+            <Handle type="source" position={Position.Left} id="left-1" style={{ background: '#64748b', width: 10, height: 10, border: '2px solid white', borderRadius: '50%', left: -6, top: '25%', zIndex: 50, cursor: 'crosshair' }} />
+            <Handle type="source" position={Position.Left} id="left-2" style={{ background: '#64748b', width: 10, height: 10, border: '2px solid white', borderRadius: '50%', left: -6, top: '50%', zIndex: 50, cursor: 'crosshair' }} />
+            <Handle type="source" position={Position.Left} id="left-3" style={{ background: '#64748b', width: 10, height: 10, border: '2px solid white', borderRadius: '50%', left: -6, top: '75%', zIndex: 50, cursor: 'crosshair' }} />
+            {/* Right side */}
+            <Handle type="source" position={Position.Right} id="right-1" style={{ background: '#64748b', width: 10, height: 10, border: '2px solid white', borderRadius: '50%', right: -6, top: '25%', zIndex: 50, cursor: 'crosshair' }} />
+            <Handle type="source" position={Position.Right} id="right-2" style={{ background: '#64748b', width: 10, height: 10, border: '2px solid white', borderRadius: '50%', right: -6, top: '50%', zIndex: 50, cursor: 'crosshair' }} />
+            <Handle type="source" position={Position.Right} id="right-3" style={{ background: '#64748b', width: 10, height: 10, border: '2px solid white', borderRadius: '50%', right: -6, top: '75%', zIndex: 50, cursor: 'crosshair' }} />
             <NodeResizer 
                 color="#0073bb" 
                 isVisible={selected} 

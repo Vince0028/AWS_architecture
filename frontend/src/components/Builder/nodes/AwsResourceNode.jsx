@@ -3,10 +3,12 @@ import { Handle, Position } from '@xyflow/react';
 
 export const AwsResourceNode = ({ data, selected }) => {
     const { toolInfo } = data;
+    const icon = toolInfo?.icon || data.icon;
+    const name = toolInfo?.name || data.label || 'Resource';
     
     // Auto-Labeling inline edit implementation
     const [isEditing, setIsEditing] = useState(false);
-    const [labelName, setLabelName] = useState(data.customName || toolInfo?.name || '');
+    const [labelName, setLabelName] = useState(data.customName || name);
     const inputRef = useRef(null);
 
     useEffect(() => {
@@ -18,11 +20,9 @@ export const AwsResourceNode = ({ data, selected }) => {
 
     const commitEdit = () => {
         setIsEditing(false);
-        // data.customName could be synced to global React Flow state, 
-        // but local state + internal node preservation works out of the box for quick edits.
     };
     
-    if (!toolInfo) return null;
+    if (!icon) return null;
 
     return (
         <div className={`relative flex flex-col items-center justify-center p-2 bg-transparent transition-all ${selected ? 'drop-shadow-md ring-2 ring-[#0073bb] rounded' : ''}`}>
@@ -30,7 +30,7 @@ export const AwsResourceNode = ({ data, selected }) => {
             <Handle type="target" position={Position.Left} id="left" className="w-2 h-2 bg-gray-400 border-none" />
             
             <div className="w-12 h-12 flex items-center justify-center bg-transparent">
-                <img src={"/" + toolInfo.icon} alt={toolInfo.name} className="w-full h-full object-contain pointer-events-none drop-shadow-sm" />
+                <img src={"/" + icon} alt={name} className="w-full h-full object-contain pointer-events-none drop-shadow-sm" />
             </div>
             
             <div className="absolute top-[100%] left-1/2 -translate-x-1/2 mt-1 z-10 w-[120px] px-2 flex justify-center">

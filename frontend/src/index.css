@@ -108,3 +108,15 @@
     @apply bg-white rounded-lg shadow-2xl w-full max-w-3xl h-[80vh] overflow-hidden flex flex-col border border-[#eaeded]; 
   }
 }
+
+/* Connection handles: hidden by default, visible on hover or when selected */
+.react-flow__node .react-flow__handle {
+  opacity: 0 !important;
+  transition: opacity 0.15s ease !important;
+  pointer-events: none !important;
+}
+.react-flow__node:hover .react-flow__handle,
+.react-flow__node.selected .react-flow__handle {
+  opacity: 1 !important;
+  pointer-events: all !important;
+}
