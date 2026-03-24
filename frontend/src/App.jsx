@@ -50,7 +50,7 @@ function App() {
 
     const openTool = (tool) => {
         setSelectedTool(tool);
-        setActiveTab(tool.setup ? "setup" : "vibe");
+        setActiveTab("vibe");
     };
 
     const handleConnectionClick = (connId) => {
