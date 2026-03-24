@@ -771,6 +771,7 @@ export const DiagramCanvas = ({ allTools, isDarkMode }) => {
                 fitView
                 defaultEdgeOptions={{ type: 'editable' }}
                 connectionMode="loose"
+                proOptions={{ hideAttribution: true }}
                 className={isDarkMode ? 'bg-slate-900' : 'bg-[#f2f3f3]'}
             >
                 <Background color={isDarkMode ? '#334155' : '#cbd5e1'} gap={20} size={1.5} />
