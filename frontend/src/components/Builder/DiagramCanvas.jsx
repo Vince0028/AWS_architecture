@@ -599,11 +599,18 @@ export const DiagramCanvas = ({ allTools }) => {
                 setNodes((nds) => nds.concat(newNode));
             }
             else if (dropData.type === 'stepBubble') {
+                const nextStep = targetNodes
+                    .filter(n => n.type === 'stepBubble')
+                    .reduce((maxStep, n) => {
+                        const parsed = parseInt(n.data?.step, 10);
+                        return Number.isNaN(parsed) ? maxStep : Math.max(maxStep, parsed);
+                    }, 0) + 1;
+
                 const newNode = {
                     id: `step_${Date.now()}`,
                     type: 'stepBubble',
                     position,
-                    data: { step: '1', color: '#16191f' },
+                    data: { step: String(nextStep), color: '#16191f' },
                     parentId: parentNodeId,
                     extent: parentNodeId ? 'parent' : undefined
                 };

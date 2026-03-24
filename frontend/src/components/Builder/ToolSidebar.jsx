@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Type, ChevronDown, ChevronRight, Star } from 'lucide-react';
 import { generalResources } from '../../data/generalResources';
+import { awsResourceIconGroups } from '../../data/awsResourceIcons';
 
 // Category icon mapping — maps category names to their official AWS category icon
 const CATEGORY_ICONS = {
@@ -39,6 +40,11 @@ const CATEGORY_ORDER = [
     'Cloud Financial Management', 'Customer Enablement', 'End User Computing',
     'Games', 'Blockchain', 'Quantum Technologies', 'Satellite'
 ];
+
+const RESOURCE_GROUP_TO_SERVICE_CATEGORY = {
+    'IoT': 'Internet of Things',
+    'Management Governance': 'Management Tools',
+};
 
 // Group boundary types with their styles and official AWS group icons
 const GROUP_ITEMS = [
@@ -84,7 +90,7 @@ const CollapsibleSection = ({ title, icon, count, defaultOpen, children, accentC
             </button>
             {open && (
                 <div style={{ padding: '4px 0 8px 0' }}>
-                    {children}
+                    {typeof children === 'function' ? children() : children}
                 </div>
             )}
         </div>
@@ -134,6 +140,23 @@ export const ToolSidebar = ({ allTools }) => {
         [searchLower]
     );
 
+    const filteredResourceGroups = useMemo(() => {
+        return awsResourceIconGroups
+            .map(group => {
+                if (!isSearching) {
+                    return group;
+                }
+
+                const titleMatch = group.title.toLowerCase().includes(searchLower);
+                const items = titleMatch
+                    ? group.items
+                    : group.items.filter(item => item.name.toLowerCase().includes(searchLower));
+
+                return { ...group, items };
+            })
+            .filter(group => group.items.length > 0);
+    }, [searchLower, isSearching]);
+
     const essentials = useMemo(() => filtered.filter(t => t.popular), [filtered]);
 
     // Group by category  
@@ -146,15 +169,30 @@ export const ToolSidebar = ({ allTools }) => {
         return map;
     }, [filtered]);
 
+    const resourceItemsByCategory = useMemo(() => {
+        const map = {};
+        filteredResourceGroups.forEach(group => {
+            const category = RESOURCE_GROUP_TO_SERVICE_CATEGORY[group.title] || group.title;
+            if (!map[category]) map[category] = [];
+            map[category].push(...group.items);
+        });
+        return map;
+    }, [filteredResourceGroups]);
+
+    const totalResourceItems = useMemo(
+        () => Object.values(resourceItemsByCategory).reduce((sum, items) => sum + items.length, 0),
+        [resourceItemsByCategory]
+    );
+
     // Sort categories by predefined order
     const sortedCategories = useMemo(() => {
-        const cats = Object.keys(categorized);
+        const cats = Array.from(new Set([...Object.keys(categorized), ...Object.keys(resourceItemsByCategory)]));
         return cats.sort((a, b) => {
             const ai = CATEGORY_ORDER.indexOf(a);
             const bi = CATEGORY_ORDER.indexOf(b);
             return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
         });
-    }, [categorized]);
+    }, [categorized, resourceItemsByCategory]);
 
     // Compact icon tile renderer for AWS service nodes
     const renderIconTile = (tool) => (
@@ -207,7 +245,7 @@ export const ToolSidebar = ({ allTools }) => {
     // Compact icon tile for general resource items
     const renderGenericTile = (item) => (
         <div 
-            key={item.id + '-gen'} 
+            key={item.id + '-' + item.icon + '-gen'} 
             draggable 
             onDragStart={(e) => onDragGenericStart(e, item)}
             title={item.name}
@@ -403,26 +441,28 @@ export const ToolSidebar = ({ allTools }) => {
 
                 {/* ═══════════ AWS SERVICE CATEGORIES ═══════════ */}
                 {sortedCategories.map(cat => {
-                    const tools = categorized[cat];
-                    if (!tools || tools.length === 0) return null;
+                    const tools = categorized[cat] || [];
+                    const resourceItems = resourceItemsByCategory[cat] || [];
+                    if (tools.length === 0 && resourceItems.length === 0) return null;
                     return (
                         <CollapsibleSection 
                             key={cat}
                             title={cat} 
                             icon={CATEGORY_ICONS[cat]} 
-                            count={tools.length}
+                            count={tools.length + resourceItems.length}
                             defaultOpen={isSearching}
                             accentColor="#374151"
                         >
                             <div style={iconGrid}>
                                 {tools.map(renderIconTile)}
+                                {resourceItems.map(renderGenericTile)}
                             </div>
                         </CollapsibleSection>
                     );
                 })}
 
                 {/* Empty state */}
-                {filtered.length === 0 && filteredGeneral.length === 0 && (
+                {filtered.length === 0 && filteredGeneral.length === 0 && totalResourceItems === 0 && (
                     <div style={{ textAlign: 'center', padding: '24px 8px', color: '#9ca3af', fontSize: '13px' }}>
                         No services found for "{search}"
                     </div>
