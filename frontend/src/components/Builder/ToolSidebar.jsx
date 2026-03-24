@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Type, ChevronDown, ChevronRight, Star } from 'lucide-react';
 import { generalResources } from '../../data/generalResources';
 import { awsResourceIconGroups } from '../../data/awsResourceIcons';
@@ -46,6 +46,9 @@ const RESOURCE_GROUP_TO_SERVICE_CATEGORY = {
     'Management Governance': 'Management Tools',
 };
 
+const MAX_SEARCH_ITEMS_PER_CATEGORY = 36;
+const MAX_SEARCH_RESULTS_TOTAL = 80;
+
 // Group boundary types with their styles and official AWS group icons
 const GROUP_ITEMS = [
     { type: 'region', label: 'Region', borderColor: '#232f3e', textColor: '#232f3e', icon: 'icons/Architecture-Group-Icons_01302026/Region_32.svg', dashed: true },
@@ -56,8 +59,15 @@ const GROUP_ITEMS = [
 ];
 
 // Collapsible section component
-const CollapsibleSection = ({ title, icon, count, defaultOpen, children, accentColor }) => {
+const CollapsibleSection = ({ title, icon, count, defaultOpen, children, accentColor, isDarkMode }) => {
     const [open, setOpen] = useState(defaultOpen || false);
+
+    useEffect(() => {
+        if (defaultOpen) {
+            setOpen(true);
+        }
+    }, [defaultOpen]);
+
     return (
         <div style={{ marginBottom: '4px' }}>
             <button
@@ -78,14 +88,14 @@ const CollapsibleSection = ({ title, icon, count, defaultOpen, children, accentC
                     borderRadius: '4px',
                     transition: 'background 0.1s',
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? '#1e293b' : '#f3f4f6'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
                 {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                 {icon && <img src={'/' + icon} alt="" style={{ width: 20, height: 20, objectFit: 'contain' }} draggable="false" />}
                 <span style={{ flex: 1 }}>{title}</span>
                 {count != null && (
-                    <span style={{ fontSize: '10px', fontWeight: 600, color: '#9ca3af', backgroundColor: '#f3f4f6', padding: '1px 6px', borderRadius: '8px' }}>{count}</span>
+                    <span style={{ fontSize: '10px', fontWeight: 600, color: isDarkMode ? '#f1f5f9' : '#9ca3af', backgroundColor: isDarkMode ? '#334155' : '#f3f4f6', padding: '1px 6px', borderRadius: '8px' }}>{count}</span>
                 )}
             </button>
             {open && (
@@ -97,7 +107,7 @@ const CollapsibleSection = ({ title, icon, count, defaultOpen, children, accentC
     );
 };
 
-export const ToolSidebar = ({ allTools }) => {
+export const ToolSidebar = ({ allTools, isDarkMode }) => {
     const [search, setSearch] = useState("");
 
     const onDragStart = (event, tool) => {
@@ -121,6 +131,13 @@ export const ToolSidebar = ({ allTools }) => {
         event.dataTransfer.effectAllowed = 'move';
     };
 
+    const getDisplayIconPath = (iconPath) => {
+        if (!isDarkMode) return iconPath;
+        return iconPath
+            .replace('/Res_48_Light/', '/Res_48_Dark/')
+            .replace('_Light.svg', '_Dark.svg');
+    };
+
     // Deduplicate
     const uniqueTools = useMemo(() => 
         Array.from(new Map(allTools.map(t => [t.name.trim(), t])).values()),
@@ -140,8 +157,21 @@ export const ToolSidebar = ({ allTools }) => {
         [searchLower]
     );
 
+    const safeResourceGroups = useMemo(() => {
+        const source = Array.isArray(awsResourceIconGroups)
+            ? awsResourceIconGroups
+            : Object.values(awsResourceIconGroups || {});
+
+        return source
+            .filter(group => group && typeof group.title === 'string')
+            .map(group => ({
+                ...group,
+                items: Array.isArray(group.items) ? group.items.filter(item => item && typeof item.name === 'string') : []
+            }));
+    }, []);
+
     const filteredResourceGroups = useMemo(() => {
-        return awsResourceIconGroups
+        return safeResourceGroups
             .map(group => {
                 if (!isSearching) {
                     return group;
@@ -155,7 +185,12 @@ export const ToolSidebar = ({ allTools }) => {
                 return { ...group, items };
             })
             .filter(group => group.items.length > 0);
-    }, [searchLower, isSearching]);
+    }, [safeResourceGroups, searchLower, isSearching]);
+
+    const flattenedSearchResourceItems = useMemo(() => {
+        if (!isSearching) return [];
+        return filteredResourceGroups.flatMap(group => group.items);
+    }, [filteredResourceGroups, isSearching]);
 
     const essentials = useMemo(() => filtered.filter(t => t.popular), [filtered]);
 
@@ -215,7 +250,10 @@ export const ToolSidebar = ({ allTools }) => {
                 transition: 'all 0.12s ease',
                 minHeight: '62px',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#eff6ff'; e.currentTarget.style.borderColor = '#bfdbfe'; }}
+            onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = isDarkMode ? '#1e293b' : '#eff6ff';
+                e.currentTarget.style.borderColor = isDarkMode ? '#475569' : '#bfdbfe';
+            }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
         >
             <img 
@@ -227,7 +265,7 @@ export const ToolSidebar = ({ allTools }) => {
             <span style={{ 
                 fontSize: '9px', 
                 fontWeight: 600, 
-                color: '#4b5563', 
+                color: isDarkMode ? '#f8fafc' : '#4b5563', 
                 lineHeight: '1.15', 
                 display: '-webkit-box',
                 WebkitLineClamp: 2,
@@ -263,19 +301,22 @@ export const ToolSidebar = ({ allTools }) => {
                 transition: 'all 0.12s ease',
                 minHeight: '62px',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f0fdf4'; e.currentTarget.style.borderColor = '#bbf7d0'; }}
+            onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = isDarkMode ? '#1e293b' : '#f0fdf4';
+                e.currentTarget.style.borderColor = isDarkMode ? '#475569' : '#bbf7d0';
+            }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
         >
             <img 
-                src={"/" + item.icon} 
+                src={"/" + getDisplayIconPath(item.icon)} 
                 alt={item.name} 
                 draggable="false" 
-                style={{ width: 32, height: 32, objectFit: 'contain', pointerEvents: 'none', flexShrink: 0 }} 
+                style={{ width: 32, height: 32, objectFit: 'contain', pointerEvents: 'none', flexShrink: 0, filter: isDarkMode ? 'brightness(1.22) contrast(1.15)' : 'none' }} 
             />
             <span style={{ 
                 fontSize: '9px', 
                 fontWeight: 600, 
-                color: '#4b5563', 
+                color: isDarkMode ? '#f8fafc' : '#4b5563', 
                 lineHeight: '1.15', 
                 display: '-webkit-box',
                 WebkitLineClamp: 2,
@@ -294,18 +335,19 @@ export const ToolSidebar = ({ allTools }) => {
 
     return (
         <aside 
-            className="shrink-0 bg-white border-l border-gray-200 flex flex-col h-full shadow-xl z-20"
+            className={`tool-sidebar-root shrink-0 border-l flex flex-col h-full shadow-xl z-20 ${isDarkMode ? 'dark' : ''}`}
             style={{ 
                 width: '320px', 
                 minWidth: '320px', 
                 maxWidth: '320px',
                 borderLeft: '1px solid #e5e7eb',
-                fontFamily: 'system-ui, -apple-system, sans-serif'
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                backgroundColor: isDarkMode ? '#0f172a' : '#ffffff'
             }}
         >
             {/* Header + Search */}
-            <div style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', flexShrink: 0, backgroundColor: 'white' }}>
-                <h3 style={{ fontWeight: 700, color: '#1f2937', marginBottom: '10px', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ padding: '12px', borderBottom: `1px solid ${isDarkMode ? '#334155' : '#e5e7eb'}`, flexShrink: 0, backgroundColor: isDarkMode ? '#0f172a' : 'white' }}>
+                <h3 style={{ fontWeight: 700, color: isDarkMode ? '#f8fafc' : '#1f2937', marginBottom: '10px', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <img src="/icons/Architecture-Group-Icons_01302026/AWS-Cloud-logo_32.svg" alt="AWS" style={{ width: 22, height: 22 }} />
                     Architect Tools
                 </h3>
@@ -318,14 +360,16 @@ export const ToolSidebar = ({ allTools }) => {
                         width: '100%', 
                         padding: '7px 10px', 
                         fontSize: '12px', 
-                        border: '1px solid #d1d5db', 
+                        border: `1px solid ${isDarkMode ? '#475569' : '#d1d5db'}`, 
                         borderRadius: '6px',
                         outline: 'none',
                         boxSizing: 'border-box',
-                        transition: 'border-color 0.15s'
+                        transition: 'border-color 0.15s',
+                        backgroundColor: isDarkMode ? '#111827' : '#ffffff',
+                        color: isDarkMode ? '#f8fafc' : '#1f2937'
                     }}
                     onFocus={(e) => { e.target.style.borderColor = '#0073bb'; e.target.style.boxShadow = '0 0 0 2px rgba(0,115,187,0.1)'; }}
-                    onBlur={(e) => { e.target.style.borderColor = '#d1d5db'; e.target.style.boxShadow = 'none'; }}
+                    onBlur={(e) => { e.target.style.borderColor = isDarkMode ? '#475569' : '#d1d5db'; e.target.style.boxShadow = 'none'; }}
                     spellCheck="false"
                 />
             </div>
@@ -334,26 +378,23 @@ export const ToolSidebar = ({ allTools }) => {
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 
                 {/* ═══════════ ANNOTATIONS & TEXT ═══════════ */}
-                {(!isSearching || 'text annotation freeform'.includes(searchLower)) && (
-                    <CollapsibleSection title="Annotations & Text" defaultOpen={false} accentColor="#6b7280">
+                <CollapsibleSection title="Annotations & Text" defaultOpen={false} accentColor={isDarkMode ? '#e2e8f0' : '#6b7280'} isDarkMode={isDarkMode}>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '6px', padding: '0 4px' }}>
                             <div 
                                 draggable 
                                 onDragStart={(e) => { e.dataTransfer.setData('application/reactflow', JSON.stringify({ type: 'textNode' })); e.dataTransfer.effectAllowed = 'move'; }} 
-                                style={{ border: '1px solid #d1d5db', borderRadius: '6px', backgroundColor: 'white', padding: '10px 8px', cursor: 'grab', display: 'flex', alignItems: 'center', gap: '10px', transition: 'all 0.15s ease' }}
-                                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.backgroundColor = '#eff6ff'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#d1d5db'; e.currentTarget.style.backgroundColor = 'white'; }}
+                                style={{ border: `1px solid ${isDarkMode ? '#475569' : '#d1d5db'}`, borderRadius: '6px', backgroundColor: isDarkMode ? '#111827' : 'white', padding: '10px 8px', cursor: 'grab', display: 'flex', alignItems: 'center', gap: '10px', transition: 'all 0.15s ease' }}
+                                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.backgroundColor = isDarkMode ? '#1e293b' : '#eff6ff'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.borderColor = isDarkMode ? '#475569' : '#d1d5db'; e.currentTarget.style.backgroundColor = isDarkMode ? '#111827' : 'white'; }}
                             >
-                                <Type size={20} strokeWidth={1.5} color="#6b7280" />
-                                <span style={{ fontSize: '12px', fontWeight: 600, color: '#374151' }}>Freeform Text</span>
+                                <Type size={20} strokeWidth={1.5} color={isDarkMode ? '#e2e8f0' : '#6b7280'} />
+                                <span style={{ fontSize: '12px', fontWeight: 600, color: isDarkMode ? '#f8fafc' : '#374151' }}>Freeform Text</span>
                             </div>
                         </div>
                     </CollapsibleSection>
-                )}
 
                 {/* ═══════════ AWS GROUPS / BOUNDARIES ═══════════ */}
-                {(!isSearching || 'group boundary region vpc subnet'.includes(searchLower)) && (
-                    <CollapsibleSection title="AWS / Groups" defaultOpen={true} count={GROUP_ITEMS.length + 1} accentColor="#232f3e">
+                <CollapsibleSection title="AWS / Groups" defaultOpen={true} count={GROUP_ITEMS.length + 1} accentColor={isDarkMode ? '#f8fafc' : '#232f3e'} isDarkMode={isDarkMode}>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', padding: '0 4px' }}>
                             {GROUP_ITEMS.map(g => (
                                 <div 
@@ -364,7 +405,7 @@ export const ToolSidebar = ({ allTools }) => {
                                     style={{ 
                                         border: `2px ${g.dashed ? 'dashed' : 'solid'} ${g.borderColor}`, 
                                         borderRadius: '6px', 
-                                        backgroundColor: 'white', 
+                                        backgroundColor: isDarkMode ? '#111827' : 'white', 
                                         padding: '8px 4px', 
                                         cursor: 'grab', 
                                         display: 'flex', 
@@ -380,7 +421,7 @@ export const ToolSidebar = ({ allTools }) => {
                                     onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = 'none'; }}
                                 >
                                     {g.icon && <img src={'/' + g.icon} alt={g.label} style={{ width: 22, height: 22, objectFit: 'contain' }} draggable="false" />}
-                                    <span style={{ fontSize: '9px', fontWeight: 700, color: g.textColor, lineHeight: '1.15' }}>{g.label}</span>
+                                    <span style={{ fontSize: '9px', fontWeight: 700, color: isDarkMode ? '#f8fafc' : g.textColor, lineHeight: '1.15' }}>{g.label}</span>
                                 </div>
                             ))}
                             {/* Step Bubble */}
@@ -391,7 +432,7 @@ export const ToolSidebar = ({ allTools }) => {
                                 style={{ 
                                     border: '2px solid #1f2937', 
                                     borderRadius: '6px', 
-                                    backgroundColor: 'white', 
+                                    backgroundColor: isDarkMode ? '#111827' : 'white', 
                                     padding: '8px 4px', 
                                     cursor: 'grab', 
                                     display: 'flex', 
@@ -406,16 +447,15 @@ export const ToolSidebar = ({ allTools }) => {
                                 onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.03)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.12)'; }}
                                 onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = 'none'; }}
                             >
-                                <span style={{ fontSize: '16px', fontWeight: 800, color: '#1f2937' }}>①</span>
-                                <span style={{ fontSize: '9px', fontWeight: 700, color: '#1f2937', lineHeight: '1.15' }}>Step Bubble</span>
+                                <span style={{ fontSize: '16px', fontWeight: 800, color: isDarkMode ? '#f8fafc' : '#1f2937' }}>①</span>
+                                <span style={{ fontSize: '9px', fontWeight: 700, color: isDarkMode ? '#f8fafc' : '#1f2937', lineHeight: '1.15' }}>Step Bubble</span>
                             </div>
                         </div>
                     </CollapsibleSection>
-                )}
 
                 {/* ═══════════ GENERAL RESOURCES ═══════════ */}
                 {filteredGeneral.length > 0 && (
-                    <CollapsibleSection title="AWS / General Resources" defaultOpen={!isSearching} count={filteredGeneral.length} accentColor="#065f46">
+                    <CollapsibleSection title="AWS / General Resources" defaultOpen={!isSearching} count={filteredGeneral.length} accentColor={isDarkMode ? '#86efac' : '#065f46'} isDarkMode={isDarkMode}>
                         <div style={iconGrid}>
                             {filteredGeneral.map(renderGenericTile)}
                         </div>
@@ -423,7 +463,7 @@ export const ToolSidebar = ({ allTools }) => {
                 )}
 
                 {/* Divider */}
-                <div style={{ borderTop: '1px solid #e5e7eb', margin: '4px 0' }} />
+                <div style={{ borderTop: `1px solid ${isDarkMode ? '#334155' : '#e5e7eb'}`, margin: '4px 0' }} />
 
                 {/* ═══════════ ESSENTIALS (always shown with star) ═══════════ */}
                 {essentials.length > 0 && (
@@ -431,7 +471,8 @@ export const ToolSidebar = ({ allTools }) => {
                         title="★ Essentials" 
                         defaultOpen={!isSearching} 
                         count={essentials.length} 
-                        accentColor="#b45309"
+                        accentColor={isDarkMode ? '#fcd34d' : '#b45309'}
+                        isDarkMode={isDarkMode}
                     >
                         <div style={iconGrid}>
                             {essentials.map(renderIconTile)}
@@ -439,31 +480,65 @@ export const ToolSidebar = ({ allTools }) => {
                     </CollapsibleSection>
                 )}
 
+                {/* ═══════════ SEARCH RESULTS ═══════════ */}
+                {isSearching && (
+                    <CollapsibleSection
+                        title="Search Results"
+                        defaultOpen={true}
+                        count={filtered.length + filteredGeneral.length + flattenedSearchResourceItems.length}
+                        accentColor={isDarkMode ? '#f8fafc' : '#1f2937'}
+                        isDarkMode={isDarkMode}
+                    >
+                        <div style={iconGrid}>
+                            {filtered.slice(0, MAX_SEARCH_RESULTS_TOTAL).map(renderIconTile)}
+                            {filteredGeneral.slice(0, MAX_SEARCH_RESULTS_TOTAL).map(renderGenericTile)}
+                            {flattenedSearchResourceItems.slice(0, MAX_SEARCH_RESULTS_TOTAL).map(renderGenericTile)}
+                        </div>
+                        {(filtered.length + filteredGeneral.length + flattenedSearchResourceItems.length) > (MAX_SEARCH_RESULTS_TOTAL * 3) && (
+                            <div style={{ padding: '6px 4px 0', fontSize: '11px', color: isDarkMode ? '#cbd5e1' : '#6b7280' }}>
+                                Showing a limited set of results. Keep typing to narrow matches.
+                            </div>
+                        )}
+                    </CollapsibleSection>
+                )}
+
                 {/* ═══════════ AWS SERVICE CATEGORIES ═══════════ */}
-                {sortedCategories.map(cat => {
+                {!isSearching && sortedCategories.map((cat) => {
                     const tools = categorized[cat] || [];
                     const resourceItems = resourceItemsByCategory[cat] || [];
                     if (tools.length === 0 && resourceItems.length === 0) return null;
+
+                    const displayTools = tools.slice(0, Math.min(MAX_SEARCH_ITEMS_PER_CATEGORY, tools.length));
+                    const resourceSlotsLeft = Math.max(0, MAX_SEARCH_ITEMS_PER_CATEGORY - displayTools.length);
+                    const displayResourceItems = resourceItems.slice(0, resourceSlotsLeft);
+                    const hiddenCount = (tools.length + resourceItems.length) - (displayTools.length + displayResourceItems.length);
+
                     return (
                         <CollapsibleSection 
                             key={cat}
                             title={cat} 
                             icon={CATEGORY_ICONS[cat]} 
                             count={tools.length + resourceItems.length}
-                            defaultOpen={isSearching}
-                            accentColor="#374151"
+                            defaultOpen={false}
+                            accentColor={isDarkMode ? '#e2e8f0' : '#374151'}
+                            isDarkMode={isDarkMode}
                         >
                             <div style={iconGrid}>
-                                {tools.map(renderIconTile)}
-                                {resourceItems.map(renderGenericTile)}
+                                {displayTools.map(renderIconTile)}
+                                {displayResourceItems.map(renderGenericTile)}
                             </div>
+                            {hiddenCount > 0 && (
+                                <div style={{ padding: '6px 4px 0', fontSize: '11px', color: isDarkMode ? '#cbd5e1' : '#6b7280' }}>
+                                    Showing first {displayTools.length + displayResourceItems.length} items in this category.
+                                </div>
+                            )}
                         </CollapsibleSection>
                     );
                 })}
 
                 {/* Empty state */}
                 {filtered.length === 0 && filteredGeneral.length === 0 && totalResourceItems === 0 && (
-                    <div style={{ textAlign: 'center', padding: '24px 8px', color: '#9ca3af', fontSize: '13px' }}>
+                    <div style={{ textAlign: 'center', padding: '24px 8px', color: isDarkMode ? '#cbd5e1' : '#9ca3af', fontSize: '13px' }}>
                         No services found for "{search}"
                     </div>
                 )}

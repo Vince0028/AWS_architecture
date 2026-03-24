@@ -120,3 +120,177 @@
   opacity: 1 !important;
   pointer-events: all !important;
 }
+
+/* Global dark theme */
+html.theme-dark body {
+  background-color: #020617;
+  color: #e2e8f0;
+}
+
+.app-theme-dark .aws-header {
+  background: #0f172a;
+  border-color: #1e293b;
+}
+
+.app-theme-dark .sidebar {
+  background: #0f172a;
+  border-color: #1e293b;
+}
+
+.app-theme-dark .sidebar-item {
+  color: #cbd5e1;
+}
+
+.app-theme-dark .sidebar-item.active {
+  background: #0b3d63;
+  border-color: #0284c7;
+  color: #e0f2fe;
+}
+
+.app-theme-dark .sidebar-item:hover:not(.active) {
+  background: #111827;
+  color: #f1f5f9;
+}
+
+.app-theme-dark .aws-card {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.app-theme-dark .aws-card:hover {
+  border-color: #38bdf8;
+  box-shadow: 0 2px 10px rgba(56, 189, 248, 0.2);
+}
+
+.app-theme-dark .playbook-tab {
+  color: #e2e8f0;
+}
+
+.app-theme-dark .playbook-tab.active {
+  color: #38bdf8;
+  border-color: #38bdf8;
+}
+
+.app-theme-dark .playbook-tab:hover:not(.active) {
+  color: #ffffff;
+}
+
+.app-theme-dark .fact-text {
+  color: #cbd5e1;
+}
+
+.app-theme-dark .vibe-title {
+  color: #fda4af;
+}
+
+.app-theme-dark .simple-desc-title {
+  color: #7dd3fc;
+}
+
+.app-theme-dark .analogy-title {
+  color: #7dd3fc;
+}
+
+.app-theme-dark .setup-step {
+  border-color: #334155;
+}
+
+.app-theme-dark .conn-row:hover {
+  background: #0b2940;
+}
+
+.app-theme-dark .cat-badge {
+  background: #0f172a;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+.app-theme-dark .pipeline-card {
+  background: #0b1220;
+  border-color: #334155;
+}
+
+.app-theme-dark .pill {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+.app-theme-dark .pill-arrow {
+  color: #64748b;
+}
+
+.app-theme-dark .modal-overlay {
+  background: rgba(2, 6, 23, 0.75);
+}
+
+.app-theme-dark .modal-content,
+.app-theme-dark .modal-content-dark {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+/* Builder sidebar dark theme overrides */
+.theme-dark .tool-sidebar-root {
+  background: #0f172a !important;
+  border-left-color: #334155 !important;
+}
+
+.theme-dark .tool-sidebar-root h3,
+.theme-dark .tool-sidebar-root span,
+.theme-dark .tool-sidebar-root button,
+.theme-dark .tool-sidebar-root div,
+.theme-dark .tool-sidebar-root label {
+  color: #e2e8f0;
+}
+
+.theme-dark .tool-sidebar-root button,
+.theme-dark .tool-sidebar-root input,
+.theme-dark .tool-sidebar-root select,
+.theme-dark .tool-sidebar-root .sidebar-item,
+.theme-dark .tool-sidebar-root > div,
+.theme-dark .tool-sidebar-root > div > div {
+  border-color: #334155 !important;
+}
+
+.theme-dark .tool-sidebar-root input {
+  background: #0b1220 !important;
+  color: #e2e8f0 !important;
+}
+
+.theme-dark .tool-sidebar-root [draggable="true"] {
+  background: #0f172a !important;
+}
+
+.theme-dark .tool-sidebar-root [draggable="true"]:hover {
+  background: #1e293b !important;
+}
+
+.theme-dark .tool-sidebar-root [draggable="true"] span {
+  color: #f8fafc !important;
+}
+
+.theme-dark .tool-sidebar-root input::placeholder {
+  color: #94a3b8;
+}
+
+/* ReactFlow control theming */
+.theme-dark .diagram-canvas-root .react-flow__controls {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.theme-dark .diagram-canvas-root .react-flow__controls button {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-color: #334155;
+}
+
+.theme-dark .diagram-canvas-root .react-flow__controls button:hover {
+  background: #1e293b;
+}
+
+.theme-dark .diagram-canvas-root .react-flow__minimap {
+  background: #0b1220;
+  border-color: #334155;
+}

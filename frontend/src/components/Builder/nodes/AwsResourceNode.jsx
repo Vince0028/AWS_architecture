@@ -5,6 +5,18 @@ export const AwsResourceNode = ({ data, selected }) => {
     const { toolInfo } = data;
     const icon = toolInfo?.icon || data.icon;
     const name = toolInfo?.name || data.label || 'Resource';
+    const isDarkMode = !!data.isDarkMode;
+
+    const getDisplayIcon = (iconPath) => {
+        if (!iconPath || !isDarkMode) return iconPath;
+        if (!iconPath.includes('Resource-Icons_01302026')) return iconPath;
+        return iconPath
+            .replace('/Res_48_Light/', '/Res_48_Dark/')
+            .replace('_Light.svg', '_Dark.svg');
+    };
+
+    const displayIcon = getDisplayIcon(icon);
+    const isResourceIcon = !!displayIcon && displayIcon.includes('Resource-Icons_01302026');
     
     // Auto-Labeling inline edit implementation
     const [isEditing, setIsEditing] = useState(false);
@@ -30,7 +42,12 @@ export const AwsResourceNode = ({ data, selected }) => {
             <Handle type="target" position={Position.Left} id="left" className="w-2 h-2 bg-gray-400 border-none" />
             
             <div className="w-12 h-12 flex items-center justify-center bg-transparent">
-                <img src={"/" + icon} alt={name} className="w-full h-full object-contain pointer-events-none drop-shadow-sm" />
+                <img
+                    src={"/" + displayIcon}
+                    alt={name}
+                    className="w-full h-full object-contain pointer-events-none drop-shadow-sm"
+                    style={{ filter: isDarkMode && isResourceIcon ? 'brightness(1.4) contrast(1.25)' : 'none' }}
+                />
             </div>
             
             <div className="absolute top-[100%] left-1/2 -translate-x-1/2 mt-1 z-10 w-[120px] px-2 flex justify-center">

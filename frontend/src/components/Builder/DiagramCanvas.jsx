@@ -218,7 +218,7 @@ const exportToPuml = (nodes, edges) => {
 };
 
 
-export const DiagramCanvas = ({ allTools }) => {
+export const DiagramCanvas = ({ allTools, isDarkMode }) => {
     const reactFlowWrapper = useRef(null);
     const { screenToFlowPosition, getNodes, getEdges } = useReactFlow();
     const { x: viewportX, y: viewportY, zoom } = useViewport();
@@ -245,6 +245,16 @@ export const DiagramCanvas = ({ allTools }) => {
         }, 500);
         return () => clearTimeout(timeout);
     }, [nodes, edges]);
+
+    React.useEffect(() => {
+        setNodes((nds) =>
+            nds.map((n) => {
+                if (n.type !== 'awsNode') return n;
+                if (n.data?.isDarkMode === isDarkMode) return n;
+                return { ...n, data: { ...n.data, isDarkMode } };
+            })
+        );
+    }, [isDarkMode]);
     const [mode, setMode] = useState('pointer'); // 'pointer' or 'hand'
 
     // History Stack
@@ -579,7 +589,8 @@ export const DiagramCanvas = ({ allTools }) => {
                     data: { 
                         label: tool ? tool.name : genericItem.name, 
                         icon: tool ? tool.icon : genericItem.icon, 
-                        toolInfo: tool || null 
+                        toolInfo: tool || null,
+                        isDarkMode
                     },
                     parentId: parentNodeId,
                     extent: parentNodeId ? 'parent' : undefined
@@ -648,7 +659,7 @@ export const DiagramCanvas = ({ allTools }) => {
                 setNodes((nds) => nds.concat(newNode));
             }
         },
-        [screenToFlowPosition, allTools, getNodes],
+        [screenToFlowPosition, allTools, getNodes, isDarkMode],
     );
 
     // Standardizes the recursive absolute coordinate fetching logic for Figma-style precision
@@ -735,7 +746,7 @@ export const DiagramCanvas = ({ allTools }) => {
     }, []);
 
     return (
-        <div className="flex-1 right-0 h-full relative" ref={reactFlowWrapper}>
+        <div className={`diagram-canvas-root flex-1 right-0 h-full relative ${isDarkMode ? 'diagram-canvas-dark' : ''}`} ref={reactFlowWrapper}>
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -760,18 +771,18 @@ export const DiagramCanvas = ({ allTools }) => {
                 fitView
                 defaultEdgeOptions={{ type: 'editable' }}
                 connectionMode="loose"
-                className="bg-[#f2f3f3]"
+                className={isDarkMode ? 'bg-slate-900' : 'bg-[#f2f3f3]'}
             >
-                <Background color="#cbd5e1" gap={20} size={1.5} />
+                <Background color={isDarkMode ? '#334155' : '#cbd5e1'} gap={20} size={1.5} />
                 <Controls />
-                <MiniMap zoomable pannable nodeColor={(n) => n.type === 'awsGroup' ? '#e2e8f0' : '#0073bb'} />
+                <MiniMap zoomable pannable nodeColor={(n) => n.type === 'awsGroup' ? (isDarkMode ? '#334155' : '#e2e8f0') : '#0073bb'} />
             </ReactFlow>
 
             {/* Toolbar for Hand / Pointer mode */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 bg-white p-1.5 rounded-lg shadow-xl border border-gray-200 flex gap-2">
+            <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 z-10 p-1.5 rounded-lg shadow-xl border flex gap-2 ${isDarkMode ? 'bg-slate-800 border-slate-600' : 'bg-white border-gray-200'}`}>
                 <button 
                     onClick={() => setMode('pointer')} 
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-md transition-colors ${mode === 'pointer' ? 'bg-[#0073bb] text-white' : 'text-gray-500 hover:bg-gray-100'}`}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-md transition-colors ${mode === 'pointer' ? 'bg-[#0073bb] text-white' : isDarkMode ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-500 hover:bg-gray-100'}`}
                     title="Select & Move (V)"
                 >
                     <MousePointer2 size={16} />
@@ -779,13 +790,13 @@ export const DiagramCanvas = ({ allTools }) => {
                 </button>
                 <button 
                     onClick={() => setMode('hand')} 
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-md transition-colors ${mode === 'hand' ? 'bg-[#0073bb] text-white' : 'text-gray-500 hover:bg-gray-100'}`}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-md transition-colors ${mode === 'hand' ? 'bg-[#0073bb] text-white' : isDarkMode ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-500 hover:bg-gray-100'}`}
                     title="Pan Canvas (H)"
                 >
                     <Hand size={16} />
                     <span className="text-xs font-bold text-inherit">Hand</span>
                 </button>
-                <div className="w-px bg-gray-300 mx-1"></div>
+                <div className={`w-px mx-1 ${isDarkMode ? 'bg-slate-600' : 'bg-gray-300'}`}></div>
                 <button 
                     onClick={() => {
                         const pumlContent = exportToPuml(getNodes(), getEdges());
@@ -799,7 +810,7 @@ export const DiagramCanvas = ({ allTools }) => {
                         document.body.removeChild(link);
                         URL.revokeObjectURL(url);
                     }} 
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-md transition-colors text-gray-500 hover:bg-gray-100`}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-md transition-colors ${isDarkMode ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-500 hover:bg-gray-100'}`}
                     title="Export to PUML"
                 >
                     <Download size={16} />
@@ -814,7 +825,7 @@ export const DiagramCanvas = ({ allTools }) => {
                             localStorage.removeItem('aws_builder_edges');
                         }
                     }} 
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-md transition-colors text-red-600 hover:bg-red-50`}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-md transition-colors ${isDarkMode ? 'text-red-300 hover:bg-red-900/30' : 'text-red-600 hover:bg-red-50'}`}
                     title="Clear Canvas"
                 >
                     <Trash2 size={16} />
@@ -822,9 +833,9 @@ export const DiagramCanvas = ({ allTools }) => {
                 </button>
             </div>
             
-            <div className="absolute top-4 left-4 z-10 bg-white/90 p-3 rounded shadow-md text-[0.65rem] border border-gray-200 pointer-events-none">
-                <span className="font-bold text-[#16191f]">Shortcuts:</span>
-                <ul className="text-gray-600 ml-4 list-disc mt-1">
+            <div className={`absolute top-4 left-4 z-10 p-3 rounded shadow-md text-[0.65rem] border pointer-events-none ${isDarkMode ? 'bg-slate-800/90 border-slate-600' : 'bg-white/90 border-gray-200'}`}>
+                <span className={`font-bold ${isDarkMode ? 'text-slate-100' : 'text-[#16191f]'}`}>Shortcuts:</span>
+                <ul className={`${isDarkMode ? 'text-slate-300' : 'text-gray-600'} ml-4 list-disc mt-1`}>
                     <li><b>Right-Click</b> any box or line to edit settings.</li>
                     <li>Drag a Group (like VPC) first.</li>
                     <li>Drag Service nodes <b>inside</b> a group.</li>
