@@ -5,7 +5,7 @@ import { BuilderLayout } from './components/Builder/BuilderLayout';
 import { LayoutGrid, Moon, Network, Sun } from 'lucide-react';
 
 function App() {
-    const [currentView, setCurrentView] = useState('playbook'); // "playbook" or "builder"
+    const [currentView, setCurrentView] = useState('playbook'); 
     const [isDarkMode, setIsDarkMode] = useState(() => {
         try {
             const savedTheme = localStorage.getItem('aws_theme_mode');
