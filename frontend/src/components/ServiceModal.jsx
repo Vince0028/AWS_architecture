@@ -1,6 +1,7 @@
 import React from 'react';
 import { getIcon } from '../utils/icons';
 import { PipelineFlow } from './PipelineFlow';
+import { DEEP_DIVE_GUIDES } from '../data/deepDiveData';
 
 export const ServiceModal = ({ 
     selectedTool, 
@@ -8,8 +9,11 @@ export const ServiceModal = ({
     activeTab, 
     setActiveTab, 
     handleConnectionClick,
+    onOpenDeepDive,
     isDarkMode
 }) => {
+    const hasDeepDive = !!DEEP_DIVE_GUIDES[selectedTool.id];
+
     return (
         <div className="modal-overlay" onClick={() => setSelectedTool(null)}>
             <div className={`modal-content ${isDarkMode ? 'modal-content-dark' : ''}`} onClick={e => e.stopPropagation()}>
@@ -66,6 +70,60 @@ export const ServiceModal = ({
                                             </div>
                                         </div>
                                     ))}
+
+                                    {/* Deep Dive Button — ABOVE Common Architectures */}
+                                    {hasDeepDive && (
+                                        <div style={{marginTop:"1.5rem",paddingTop:"1rem",borderTop:`1px solid ${isDarkMode ? '#334155' : '#eaeded'}`}}>
+                                            <button
+                                                onClick={() => onOpenDeepDive && onOpenDeepDive(selectedTool)}
+                                                className="deep-dive-nav-btn"
+                                                style={{
+                                                    width:"100%",
+                                                    padding:"12px 20px",
+                                                    background: isDarkMode 
+                                                        ? 'linear-gradient(180deg, #1a3a5c 0%, #0f2847 100%)' 
+                                                        : 'linear-gradient(180deg, #ffffff 0%, #f2f3f3 100%)',
+                                                    border: isDarkMode ? '1px solid #2563eb' : '1px solid #aab7b8',
+                                                    borderRadius:4,
+                                                    cursor:"pointer",
+                                                    display:"flex",
+                                                    alignItems:"center",
+                                                    gap:12,
+                                                    transition:"all 0.15s ease",
+                                                    fontFamily:"inherit",
+                                                }}
+                                                onMouseEnter={e => { 
+                                                    e.currentTarget.style.borderColor = isDarkMode ? '#38bdf8' : '#0073bb'; 
+                                                }}
+                                                onMouseLeave={e => { 
+                                                    e.currentTarget.style.borderColor = isDarkMode ? '#2563eb' : '#aab7b8'; 
+                                                }}
+                                            >
+                                                <div style={{
+                                                    width:32,height:32,borderRadius:4,
+                                                    background: isDarkMode ? '#0369a1' : '#0073bb',
+                                                    display:"flex",alignItems:"center",justifyContent:"center",
+                                                    flexShrink:0,
+                                                }}>
+                                                    <svg width="16" height="16" fill="none" stroke="#fff" viewBox="0 0 24 24" strokeWidth="2">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                                    </svg>
+                                                </div>
+                                                <div style={{flex:1,textAlign:"left"}}>
+                                                    <div style={{fontWeight:700,fontSize:"0.9rem",color:isDarkMode ? '#e0f2fe' : '#16191f'}}>
+                                                        Deep Dive Setup Guide
+                                                    </div>
+                                                    <div style={{fontSize:"0.75rem",color:isDarkMode ? '#94a3b8' : '#545b64',marginTop:1}}>
+                                                        Step-by-step console instructions, debugging tips & verification checklist
+                                                    </div>
+                                                </div>
+                                                <svg width="18" height="18" fill="none" stroke={isDarkMode ? '#38bdf8' : '#0073bb'} viewBox="0 0 24 24" style={{flexShrink:0}}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    )}
+
                                     {selectedTool.pipelines && selectedTool.pipelines.length > 0 && (
                                         <div style={{marginTop:"1.5rem",paddingTop:"1rem",borderTop:`1px solid ${isDarkMode ? '#334155' : '#eaeded'}`}}>
                                             <span style={{color:isDarkMode ? '#c4b5fd' : '#6b3fa0',fontWeight:700,fontSize:"0.8rem",textTransform:"uppercase",display:"block",marginBottom:"1rem"}}>COMMON ARCHITECTURES</span>

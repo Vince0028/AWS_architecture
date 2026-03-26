@@ -1,0 +1,140 @@
+{
+  "id": "amazonec2",
+  "name": "Amazon EC2",
+  "category": "Compute",
+  "icon": "icons/Architecture-Service-Icons_01302026/Arch_Compute/64/Arch_Amazon-EC2_64.svg",
+  "vibe": "Amazon EC2 handles the heavy compute lifting so you focus on code.",
+  "explanation": "A managed compute service that provides Amazon EC2 capabilities for running applications, processing workloads, and scaling infrastructure on AWS.",
+  "analogy": "Having a team of workers that grows and shrinks based on how much work there is - that's Amazon EC2.",
+  "fact": "RUNS ON CUSTOM AWS NITRO SYSTEM HARDWARE FOR ENHANCED PERFORMANCE.",
+  "popular": true,
+  "components": [
+    "Core Feature",
+    "EC2 Management",
+    "Monitoring"
+  ],
+  "setup": [
+    {
+      "s": 1,
+      "a": "Open Amazon EC2 in AWS Console",
+      "l": "Console → Amazon EC2"
+    },
+    {
+      "s": 2,
+      "a": "Create or launch a new compute resource",
+      "l": "Amazon EC2 → Create / Launch"
+    },
+    {
+      "s": 3,
+      "a": "Choose instance type or configuration",
+      "l": "Configuration → Instance type"
+    },
+    {
+      "s": 4,
+      "a": "Configure networking (VPC, subnet, security group)",
+      "l": "VPC → Subnets → SG"
+    },
+    {
+      "s": 5,
+      "a": "Assign IAM role for permissions",
+      "l": "IAM → Instance Profile"
+    },
+    {
+      "s": 6,
+      "a": "Launch and SSH/connect to verify",
+      "l": "Amazon EC2 → Connect"
+    }
+  ],
+  "connections": [
+    {
+      "id": "amazonvirtualprivatecloud",
+      "n": "VPC",
+      "d": "Network isolation",
+      "c": "Networking"
+    },
+    {
+      "id": "awsidentityandaccessmanagement",
+      "n": "IAM",
+      "d": "Instance permissions",
+      "c": "Security"
+    },
+    {
+      "id": "amazonsimplestorageservice",
+      "n": "S3",
+      "d": "Store artifacts and logs",
+      "c": "Storage"
+    },
+    {
+      "id": "amazoncloudwatch",
+      "n": "CloudWatch",
+      "d": "Monitor CPU, memory, network",
+      "c": "Management"
+    },
+    {
+      "id": "elasticloadbalancing",
+      "n": "ALB",
+      "d": "Distribute traffic",
+      "c": "Networking"
+    },
+    {
+      "id": "awscloudformation",
+      "n": "CloudFormation",
+      "d": "Infrastructure as code",
+      "c": "Management"
+    }
+  ],
+  "pipelines": [
+    {
+      "name": "Web Application Deployment",
+      "desc": "Load-balanced compute",
+      "steps": [
+        {
+          "n": "Route 53",
+          "r": "DNS",
+          "c": "purple"
+        },
+        {
+          "n": "ALB",
+          "r": "Load Balance",
+          "c": "blue"
+        },
+        {
+          "n": "Amazon EC2",
+          "r": "Run App",
+          "c": "orange"
+        },
+        {
+          "n": "RDS",
+          "r": "Database",
+          "c": "blue"
+        }
+      ]
+    },
+    {
+      "name": "Auto-Scaling Architecture",
+      "desc": "Dynamic capacity",
+      "steps": [
+        {
+          "n": "CloudWatch",
+          "r": "Metrics",
+          "c": "red"
+        },
+        {
+          "n": "Amazon EC2",
+          "r": "Scale",
+          "c": "orange"
+        },
+        {
+          "n": "S3",
+          "r": "Assets",
+          "c": "green"
+        },
+        {
+          "n": "CloudFront",
+          "r": "CDN",
+          "c": "purple"
+        }
+      ]
+    }
+  ]
+}

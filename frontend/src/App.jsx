@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import ALL_TOOLS from './data/tools.json';
 import { ServiceModal } from './components/ServiceModal';
 import { BuilderLayout } from './components/Builder/BuilderLayout';
+import { DeepDiveGuide } from './components/DeepDiveGuide';
+import { DEEP_DIVE_GUIDES } from './data/deepDiveData';
 import { LayoutGrid, Moon, Network, Sun } from 'lucide-react';
 
 function App() {
@@ -16,6 +18,7 @@ function App() {
     });
 
     const [selectedTool, setSelectedTool] = useState(null);
+    const [deepDiveTool, setDeepDiveTool] = useState(null);
     const [search, setSearch] = useState('');
     const [activeCategory, setActiveCategory] = useState('All');
     const [activeTab, setActiveTab] = useState('vibe');
@@ -81,6 +84,17 @@ function App() {
         if (found) openTool(found);
     };
 
+    const openDeepDive = (tool) => {
+        setSelectedTool(null);    // Close the modal
+        setDeepDiveTool(tool);    // Open deep dive page
+    };
+
+    const closeDeepDive = () => {
+        setDeepDiveTool(null);
+    };
+
+    const deepDiveData = deepDiveTool ? DEEP_DIVE_GUIDES[deepDiveTool.id] : null;
+
     return (
         <div className={`min-h-screen flex flex-col w-full h-screen overflow-hidden ${isDarkMode ? 'app-theme-dark' : ''}`}>
             <header className="aws-header w-full border-b border-[#161e2d] flex-shrink-0 relative z-20">
@@ -89,14 +103,14 @@ function App() {
 
                 <div className="mx-auto flex bg-[#161e2d] rounded-lg p-1 border border-[#303e52]">
                     <button
-                        onClick={() => setCurrentView('playbook')}
-                        className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${currentView === 'playbook' ? 'bg-[#0073bb] text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-[#232f3e]'}`}
+                        onClick={() => { setCurrentView('playbook'); closeDeepDive(); }}
+                        className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${currentView === 'playbook' && !deepDiveTool ? 'bg-[#0073bb] text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-[#232f3e]'}`}
                     >
                         <LayoutGrid size={16} />
                         Service Playbook
                     </button>
                     <button
-                        onClick={() => setCurrentView('builder')}
+                        onClick={() => { setCurrentView('builder'); closeDeepDive(); }}
                         className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${currentView === 'builder' ? 'bg-[#0073bb] text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-[#232f3e]'}`}
                     >
                         <Network size={16} />
@@ -118,7 +132,127 @@ function App() {
             <main className={`flex-1 w-full relative flex h-full overflow-hidden ${isDarkMode ? 'bg-slate-950' : 'bg-white'}`}>
                 {currentView === 'builder' ? (
                     <BuilderLayout allTools={ALL_TOOLS} isDarkMode={isDarkMode} />
+                ) : deepDiveTool && deepDiveData ? (
+                    /* ═══════════════════════════════════════════════ */
+                    /* DEEP DIVE FULL-PAGE VIEW                       */
+                    /* ═══════════════════════════════════════════════ */
+                    <div className="flex w-full h-full">
+                        {/* Sidebar — same as main playbook */}
+                        <div className="sidebar py-4 hidden md:block">
+                            <div className={`px-4 mb-4 text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Categories</div>
+                            <div onClick={() => { closeDeepDive(); setActiveCategory('All'); }} className={'sidebar-item ' + (activeCategory === 'All' ? 'active' : '')}>
+                                All Services
+                            </div>
+                            {sortedCategories.map(cat => (
+                                <div key={cat} onClick={() => { closeDeepDive(); scrollToCategory(cat); }} className={'sidebar-item ' + (activeCategory === cat ? 'active' : '')}>
+                                    {cat}
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Center content — Deep Dive Guide */}
+                        <div className={`flex-1 overflow-y-auto h-full ${isDarkMode ? 'bg-slate-900' : 'bg-[#f8f9fa]'}`}>
+                            {/* Breadcrumb header */}
+                            <div className={`sticky top-0 border-b z-10 shadow-sm ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-gray-200'}`}
+                                 style={{ padding: '12px 24px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                    <button
+                                        onClick={closeDeepDive}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: 6,
+                                            padding: '6px 12px',
+                                            background: isDarkMode ? '#1e293b' : '#ffffff',
+                                            border: `1px solid ${isDarkMode ? '#475569' : '#aab7b8'}`,
+                                            borderRadius: 4,
+                                            cursor: 'pointer',
+                                            color: isDarkMode ? '#e0f2fe' : '#16191f',
+                                            fontSize: '0.82rem',
+                                            fontWeight: 600,
+                                            fontFamily: 'inherit',
+                                            transition: 'all 0.15s ease',
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.borderColor = isDarkMode ? '#38bdf8' : '#0073bb'}
+                                        onMouseLeave={e => e.currentTarget.style.borderColor = isDarkMode ? '#475569' : '#aab7b8'}
+                                    >
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                        Back to Playbook
+                                    </button>
+                                    <div style={{
+                                        width: 1,
+                                        height: 24,
+                                        background: isDarkMode ? '#334155' : '#d1d5db',
+                                    }} />
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                        <img src={"/" + deepDiveTool.icon} style={{width:28,height:28,objectFit:"contain"}} onError={(e)=>e.target.style.display="none"} />
+                                        <div>
+                                            <div style={{ fontWeight: 700, fontSize: '1rem', color: isDarkMode ? '#f1f5f9' : '#16191f', lineHeight: 1.2 }}>
+                                                {deepDiveTool.name}
+                                            </div>
+                                            <div style={{ fontSize: '0.72rem', color: isDarkMode ? '#94a3b8' : '#545b64' }}>
+                                                Deep Dive Setup Guide
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Deep Dive content */}
+                            <div style={{ padding: '24px', maxWidth: 900, margin: '0 auto' }}>
+                                {/* Service info banner */}
+                                <div style={{
+                                    display: 'flex', alignItems: 'center', gap: 16,
+                                    padding: '20px 24px',
+                                    background: isDarkMode ? '#0f172a' : '#ffffff',
+                                    border: `1px solid ${isDarkMode ? '#334155' : '#eaeded'}`,
+                                    borderRadius: 8,
+                                    marginBottom: 24,
+                                }}>
+                                    <div style={{
+                                        width:56, height:56, borderRadius:8,
+                                        background: isDarkMode ? '#1e293b' : '#f8f9fa',
+                                        border: `1px solid ${isDarkMode ? '#334155' : '#eaeded'}`,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        padding: 8, flexShrink: 0,
+                                    }}>
+                                        <img src={"/" + deepDiveTool.icon} style={{width:"100%",height:"100%",objectFit:"contain"}} onError={(e)=>e.target.style.display="none"} />
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <h1 style={{
+                                            margin: 0, fontSize: '1.4rem', fontWeight: 700,
+                                            color: isDarkMode ? '#f1f5f9' : '#16191f',
+                                        }}>
+                                            {deepDiveTool.name}
+                                        </h1>
+                                        <p style={{
+                                            margin: '4px 0 0', fontSize: '0.85rem', lineHeight: 1.5,
+                                            color: isDarkMode ? '#94a3b8' : '#545b64',
+                                        }}>
+                                            {deepDiveTool.explanation}
+                                        </p>
+                                    </div>
+                                    <span style={{
+                                        padding: '4px 10px', borderRadius: 4,
+                                        fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase',
+                                        background: isDarkMode ? '#082f49' : '#f2f8fd',
+                                        color: isDarkMode ? '#7dd3fc' : '#0073bb',
+                                        border: `1px solid ${isDarkMode ? '#0c4a6e' : '#d5e8f6'}`,
+                                        flexShrink: 0,
+                                    }}>
+                                        {deepDiveTool.category}
+                                    </span>
+                                </div>
+
+                                {/* The DeepDiveGuide component */}
+                                <DeepDiveGuide data={deepDiveData} isDarkMode={isDarkMode} />
+                            </div>
+                        </div>
+                    </div>
                 ) : (
+                    /* ═══════════════════════════════════════════════ */
+                    /* NORMAL PLAYBOOK VIEW                           */
+                    /* ═══════════════════════════════════════════════ */
                     <div className="flex w-full h-full">
                         <div className="sidebar py-4 hidden md:block">
                             <div className={`px-4 mb-4 text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Categories</div>
@@ -205,6 +339,7 @@ function App() {
                         activeTab={activeTab}
                         setActiveTab={setActiveTab}
                         handleConnectionClick={handleConnectionClick}
+                        onOpenDeepDive={openDeepDive}
                         isDarkMode={isDarkMode}
                     />
                 )}
