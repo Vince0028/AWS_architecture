@@ -97,30 +97,33 @@ function App() {
 
     return (
         <div className={`min-h-screen flex flex-col w-full h-screen overflow-hidden ${isDarkMode ? 'app-theme-dark' : ''}`}>
-            <header className="aws-header w-full border-b border-[#161e2d] flex-shrink-0 relative z-20">
-                <img src="/images/AWSCC_APC_LOGO.jpg" style={{ width: 32, height: 32, borderRadius: 4, objectFit: 'contain' }} className="mr-3" />
-                <span className="font-bold text-lg tracking-tight hidden sm:block">AWS Management Architecture</span>
+            <header className="aws-header w-full border-b border-[#161e2d] flex-shrink-0 relative z-20 gap-2 sm:gap-3">
+                <img src="/images/AWSCC_APC_LOGO.jpg" style={{ width: 32, height: 32, borderRadius: 4, objectFit: 'contain' }} className="mr-2 sm:mr-3 shrink-0" />
+                <span className="sm:hidden flex-1 text-center font-bold tracking-tight text-base leading-tight text-white/95 px-2">AWS Architecture</span>
+                <span className="hidden sm:block font-bold text-lg tracking-tight">AWS Management Architecture</span>
 
-                <div className="mx-auto flex bg-[#161e2d] rounded-lg p-1 border border-[#303e52]">
+                <div className="flex w-full sm:w-auto sm:mx-auto bg-[#161e2d] rounded-lg p-1 border border-[#303e52] order-3 sm:order-none">
                     <button
                         onClick={() => { setCurrentView('playbook'); closeDeepDive(); }}
-                        className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${currentView === 'playbook' && !deepDiveTool ? 'bg-[#0073bb] text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-[#232f3e]'}`}
+                        className={`flex-1 sm:flex-none justify-center flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors ${currentView === 'playbook' && !deepDiveTool ? 'bg-[#0073bb] text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-[#232f3e]'}`}
                     >
                         <LayoutGrid size={16} />
-                        Service Playbook
+                        <span className="hidden sm:inline">Service Playbook</span>
+                        <span className="sm:hidden">Playbook</span>
                     </button>
                     <button
                         onClick={() => { setCurrentView('builder'); closeDeepDive(); }}
-                        className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${currentView === 'builder' ? 'bg-[#0073bb] text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-[#232f3e]'}`}
+                        className={`flex-1 sm:flex-none justify-center flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors ${currentView === 'builder' ? 'bg-[#0073bb] text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-[#232f3e]'}`}
                     >
                         <Network size={16} />
-                        Diagram Builder
+                        <span className="hidden sm:inline">Diagram Builder</span>
+                        <span className="sm:hidden">Builder</span>
                     </button>
                 </div>
 
                 <button
                     onClick={() => setIsDarkMode(prev => !prev)}
-                    className="ml-4 p-2 rounded-md border border-[#4b5563] text-gray-200 hover:text-white hover:bg-[#1b2735] transition-colors"
+                    className="ml-2 sm:ml-4 p-2 rounded-md border border-[#4b5563] text-gray-200 hover:text-white hover:bg-[#1b2735] transition-colors shrink-0"
                     title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
                 >
                     {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
@@ -153,9 +156,8 @@ function App() {
                         {/* Center content — Deep Dive Guide */}
                         <div className={`flex-1 overflow-y-auto h-full ${isDarkMode ? 'bg-slate-900' : 'bg-[#f8f9fa]'}`}>
                             {/* Breadcrumb header */}
-                            <div className={`sticky top-0 border-b z-10 shadow-sm ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-gray-200'}`}
-                                 style={{ padding: '12px 24px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div className={`sticky top-0 border-b z-10 shadow-sm px-4 md:px-6 py-3 ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-gray-200'}`}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                                     <button
                                         onClick={closeDeepDive}
                                         style={{
@@ -183,7 +185,8 @@ function App() {
                                         width: 1,
                                         height: 24,
                                         background: isDarkMode ? '#334155' : '#d1d5db',
-                                    }} />
+                                        display: 'none',
+                                    }} className="sm:block" />
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                         <img src={"/" + deepDiveTool.icon} style={{width:28,height:28,objectFit:"contain"}} onError={(e)=>e.target.style.display="none"} />
                                         <div>
@@ -199,10 +202,11 @@ function App() {
                             </div>
 
                             {/* Deep Dive content */}
-                            <div style={{ padding: '24px', maxWidth: 900, margin: '0 auto' }}>
+                            <div style={{ padding: '16px', maxWidth: 900, margin: '0 auto' }} className="md:p-6">
                                 {/* Service info banner */}
                                 <div style={{
                                     display: 'flex', alignItems: 'center', gap: 16,
+                                    flexWrap: 'wrap',
                                     padding: '20px 24px',
                                     background: isDarkMode ? '#0f172a' : '#ffffff',
                                     border: `1px solid ${isDarkMode ? '#334155' : '#eaeded'}`,
@@ -267,9 +271,9 @@ function App() {
                         </div>
 
                         <div className={`flex-1 overflow-y-auto h-full ${isDarkMode ? 'bg-slate-900' : 'bg-[#f8f9fa]'}`}>
-                            <div className={`sticky top-0 border-b p-6 z-10 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-gray-200'}`}>
+                            <div className={`sticky top-0 border-b p-4 md:p-6 z-10 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-gray-200'}`}>
                                 <div>
-                                    <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-slate-100' : 'text-[#16191f]'}`}>Vibe-to-Cloud Playbook</h1>
+                                    <h1 className={`text-xl md:text-2xl font-bold ${isDarkMode ? 'text-slate-100' : 'text-[#16191f]'}`}>Vibe-to-Cloud Playbook</h1>
                                     <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Click any service for setup guides, connections & pipeline architectures.</p>
                                 </div>
                                 <div className="w-full md:w-96 relative">
@@ -286,7 +290,7 @@ function App() {
                                 </div>
                             </div>
 
-                            <div className="p-8 max-w-7xl mx-auto">
+                            <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto">
                                 {renderedCategories.length === 0 && (
                                     <div className="text-center py-20">
                                         <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

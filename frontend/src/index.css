@@ -294,3 +294,50 @@ html.theme-dark body {
   background: #0b1220;
   border-color: #334155;
 }
+
+@media (max-width: 768px) {
+  .aws-header {
+    @apply h-auto py-2 px-2.5 flex-wrap items-start;
+  }
+
+  .sidebar {
+    height: auto;
+  }
+
+  .modal-overlay {
+    @apply p-2;
+    align-items: flex-end;
+  }
+
+  .modal-content {
+    @apply h-[90vh] rounded-t-xl rounded-b-md;
+  }
+
+  .modal-tab-row {
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .conn-row {
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .conn-row .cat-badge {
+    display: none;
+  }
+
+  .conn-service-name {
+    min-width: 0 !important;
+    overflow-wrap: anywhere;
+  }
+
+  .conn-service-desc {
+    grid-column: 1 / -1;
+    margin-top: 2px;
+  }
+
+  .diagram-canvas-root .react-flow__minimap {
+    display: none;
+  }
+}

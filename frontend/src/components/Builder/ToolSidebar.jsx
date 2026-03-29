@@ -107,7 +107,7 @@ const CollapsibleSection = ({ title, icon, count, defaultOpen, children, accentC
     );
 };
 
-export const ToolSidebar = ({ allTools, isDarkMode }) => {
+export const ToolSidebar = ({ allTools, isDarkMode, isMobile = false, isOpen = true, onClose }) => {
     const [search, setSearch] = useState("");
 
     const onDragStart = (event, tool) => {
@@ -337,20 +337,47 @@ export const ToolSidebar = ({ allTools, isDarkMode }) => {
         <aside 
             className={`tool-sidebar-root shrink-0 border-l flex flex-col h-full shadow-xl z-20 ${isDarkMode ? 'dark' : ''}`}
             style={{ 
-                width: '320px', 
-                minWidth: '320px', 
-                maxWidth: '320px',
+                width: isMobile ? 'min(92vw, 340px)' : '320px',
+                minWidth: isMobile ? 'min(92vw, 340px)' : '320px',
+                maxWidth: isMobile ? 'min(92vw, 340px)' : '320px',
                 borderLeft: '1px solid #e5e7eb',
                 fontFamily: 'system-ui, -apple-system, sans-serif',
-                backgroundColor: isDarkMode ? '#0f172a' : '#ffffff'
+                backgroundColor: isDarkMode ? '#0f172a' : '#ffffff',
+                position: isMobile ? 'absolute' : 'relative',
+                right: 0,
+                top: 0,
+                bottom: 0,
+                zIndex: isMobile ? 40 : 20,
+                transform: isMobile ? (isOpen ? 'translateX(0)' : 'translateX(100%)') : 'none',
+                transition: isMobile ? 'transform 0.2s ease' : 'none'
             }}
         >
             {/* Header + Search */}
             <div style={{ padding: '12px', borderBottom: `1px solid ${isDarkMode ? '#334155' : '#e5e7eb'}`, flexShrink: 0, backgroundColor: isDarkMode ? '#0f172a' : 'white' }}>
-                <h3 style={{ fontWeight: 700, color: isDarkMode ? '#f8fafc' : '#1f2937', marginBottom: '10px', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <img src="/icons/Architecture-Group-Icons_01302026/AWS-Cloud-logo_32.svg" alt="AWS" style={{ width: 22, height: 22 }} />
-                    Architect Tools
-                </h3>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                    <h3 style={{ fontWeight: 700, color: isDarkMode ? '#f8fafc' : '#1f2937', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: 0 }}>
+                        <img src="/icons/Architecture-Group-Icons_01302026/AWS-Cloud-logo_32.svg" alt="AWS" style={{ width: 22, height: 22 }} />
+                        Architect Tools
+                    </h3>
+                    {isMobile && (
+                        <button
+                            onClick={() => onClose && onClose()}
+                            aria-label="Close tools sidebar"
+                            style={{
+                                border: `1px solid ${isDarkMode ? '#475569' : '#d1d5db'}`,
+                                borderRadius: '6px',
+                                background: isDarkMode ? '#111827' : '#ffffff',
+                                color: isDarkMode ? '#e2e8f0' : '#374151',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                padding: '5px 8px',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Close
+                        </button>
+                    )}
+                </div>
                 <input 
                     type="text" 
                     placeholder="Search services, categories..." 

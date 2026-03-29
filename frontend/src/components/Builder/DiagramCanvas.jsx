@@ -780,22 +780,22 @@ export const DiagramCanvas = ({ allTools, isDarkMode }) => {
             </ReactFlow>
 
             {/* Toolbar for Hand / Pointer mode */}
-            <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 z-10 p-1.5 rounded-lg shadow-xl border flex gap-2 ${isDarkMode ? 'bg-slate-800 border-slate-600' : 'bg-white border-gray-200'}`}>
+            <div className={`absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-10 p-1 sm:p-1.5 rounded-lg shadow-xl border flex gap-1 sm:gap-2 max-w-[95vw] overflow-x-auto ${isDarkMode ? 'bg-slate-800 border-slate-600' : 'bg-white border-gray-200'}`}>
                 <button 
                     onClick={() => setMode('pointer')} 
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-md transition-colors ${mode === 'pointer' ? 'bg-[#0073bb] text-white' : isDarkMode ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-500 hover:bg-gray-100'}`}
+                    className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-md transition-colors ${mode === 'pointer' ? 'bg-[#0073bb] text-white' : isDarkMode ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-500 hover:bg-gray-100'}`}
                     title="Select & Move (V)"
                 >
                     <MousePointer2 size={16} />
-                    <span className="text-xs font-bold text-inherit">Pointer</span>
+                    <span className="hidden sm:inline text-xs font-bold text-inherit">Pointer</span>
                 </button>
                 <button 
                     onClick={() => setMode('hand')} 
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-md transition-colors ${mode === 'hand' ? 'bg-[#0073bb] text-white' : isDarkMode ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-500 hover:bg-gray-100'}`}
+                    className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-md transition-colors ${mode === 'hand' ? 'bg-[#0073bb] text-white' : isDarkMode ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-500 hover:bg-gray-100'}`}
                     title="Pan Canvas (H)"
                 >
                     <Hand size={16} />
-                    <span className="text-xs font-bold text-inherit">Hand</span>
+                    <span className="hidden sm:inline text-xs font-bold text-inherit">Hand</span>
                 </button>
                 <div className={`w-px mx-1 ${isDarkMode ? 'bg-slate-600' : 'bg-gray-300'}`}></div>
                 <button 
@@ -811,11 +811,11 @@ export const DiagramCanvas = ({ allTools, isDarkMode }) => {
                         document.body.removeChild(link);
                         URL.revokeObjectURL(url);
                     }} 
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-md transition-colors ${isDarkMode ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-500 hover:bg-gray-100'}`}
+                    className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-md transition-colors ${isDarkMode ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-500 hover:bg-gray-100'}`}
                     title="Export to PUML"
                 >
                     <Download size={16} />
-                    <span className="text-xs font-bold text-inherit">Export</span>
+                    <span className="hidden sm:inline text-xs font-bold text-inherit">Export</span>
                 </button>
                 <button 
                     onClick={() => {
@@ -826,15 +826,15 @@ export const DiagramCanvas = ({ allTools, isDarkMode }) => {
                             localStorage.removeItem('aws_builder_edges');
                         }
                     }} 
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-md transition-colors ${isDarkMode ? 'text-red-300 hover:bg-red-900/30' : 'text-red-600 hover:bg-red-50'}`}
+                    className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-md transition-colors ${isDarkMode ? 'text-red-300 hover:bg-red-900/30' : 'text-red-600 hover:bg-red-50'}`}
                     title="Clear Canvas"
                 >
                     <Trash2 size={16} />
-                    <span className="text-xs font-bold text-inherit">Clear</span>
+                    <span className="hidden sm:inline text-xs font-bold text-inherit">Clear</span>
                 </button>
             </div>
             
-            <div className={`absolute top-4 left-4 z-10 p-3 rounded shadow-md text-[0.65rem] border pointer-events-none ${isDarkMode ? 'bg-slate-800/90 border-slate-600' : 'bg-white/90 border-gray-200'}`}>
+            <div className={`absolute top-4 left-4 z-10 p-3 rounded shadow-md text-[0.65rem] border pointer-events-none hidden sm:block ${isDarkMode ? 'bg-slate-800/90 border-slate-600' : 'bg-white/90 border-gray-200'}`}>
                 <span className={`font-bold ${isDarkMode ? 'text-slate-100' : 'text-[#16191f]'}`}>Shortcuts:</span>
                 <ul className={`${isDarkMode ? 'text-slate-300' : 'text-gray-600'} ml-4 list-disc mt-1`}>
                     <li><b>Right-Click</b> any box or line to edit settings.</li>

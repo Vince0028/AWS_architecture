@@ -29,7 +29,7 @@ export const ServiceModal = ({
                         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
-                <div style={{display:"flex",borderBottom:`1px solid ${isDarkMode ? '#334155' : '#eaeded'}`,padding:"0 1.5rem",flexShrink:0}}>
+                <div className="modal-tab-row" style={{display:"flex",borderBottom:`1px solid ${isDarkMode ? '#334155' : '#eaeded'}`,padding:"0 1.5rem",flexShrink:0}}>
                     <button className={"playbook-tab " + (activeTab === "vibe" ? "active" : "")} onClick={() => setActiveTab("vibe")}>Overview</button>
                     <button className={"playbook-tab " + (activeTab === "setup" ? "active" : "")} onClick={() => setActiveTab("setup")}>Setup Guide</button>
                     <button className={"playbook-tab " + (activeTab === "connections" ? "active" : "")} onClick={() => setActiveTab("connections")}>Connections{selectedTool.connections ? " (" + selectedTool.connections.length + ")" : ""}</button>
@@ -154,9 +154,9 @@ export const ServiceModal = ({
                                         return (
                                         <div key={i} className="conn-row" onClick={() => handleConnectionClick(conn.id)} title={"View " + conn.n}>
                                             <span className="cat-badge">{conn.c}</span>
-                                            {cIcon ? <img src={"/" + cIcon} style={{width:22,height:22,objectFit:"contain",flexShrink:0}} onError={(e)=>e.target.style.display="none"} /> : <div style={{width:22,height:22,borderRadius:4,background:isDarkMode ? '#334155' : '#eaeded',flexShrink:0}}></div>}
-                                            <span style={{fontWeight:700,color:isDarkMode ? '#7dd3fc' : '#0073bb',fontSize:"0.85rem",minWidth:120,cursor:"pointer"}}>{conn.n}</span>
-                                            <span style={{color:isDarkMode ? '#e2e8f0' : '#545b64',fontSize:"0.8rem",flex:1}}>{conn.d}</span>
+                                            {cIcon ? <img className="conn-service-icon" src={"/" + cIcon} style={{width:22,height:22,objectFit:"contain",flexShrink:0}} onError={(e)=>e.target.style.display="none"} /> : <div className="conn-service-icon" style={{width:22,height:22,borderRadius:4,background:isDarkMode ? '#334155' : '#eaeded',flexShrink:0}}></div>}
+                                            <span className="conn-service-name" style={{fontWeight:700,color:isDarkMode ? '#7dd3fc' : '#0073bb',fontSize:"0.85rem",minWidth:120,cursor:"pointer"}}>{conn.n}</span>
+                                            <span className="conn-service-desc" style={{color:isDarkMode ? '#e2e8f0' : '#545b64',fontSize:"0.8rem",flex:1}}>{conn.d}</span>
                                         </div>
                                         );
                                     })}
