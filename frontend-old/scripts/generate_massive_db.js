@@ -3,7 +3,7 @@ const fs = require('fs');
 const curated = require('./vibeDB_curated.json');
 const tools = require('./tool_list.json');
 
-// Super smart generator loop using specific AWS knowledge.
+
 // As an AI, I am hand-coding these matching rules to be highly distinct and accurate to the exact AWS service domain.
 let finalDB = { ...curated };
 
