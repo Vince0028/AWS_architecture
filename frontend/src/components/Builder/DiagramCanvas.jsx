@@ -16,11 +16,12 @@ import { AwsGroupNode } from './nodes/AwsGroupNode';
 import { StepBubbleNode } from './nodes/StepBubbleNode';
 import { ShapeNode } from './nodes/ShapeNode';
 import { TextNode } from './nodes/TextNode';
+import { ImageNode } from './nodes/ImageNode';
 import { EditableEdge } from './edges/EditableEdge';
 
 import { MousePointer2, Hand, Trash2, Download } from 'lucide-react';
 
-const nodeTypes = { awsNode: AwsResourceNode, awsGroup: AwsGroupNode, stepBubble: StepBubbleNode, shapeNode: ShapeNode, textNode: TextNode };
+const nodeTypes = { awsNode: AwsResourceNode, awsGroup: AwsGroupNode, stepBubble: StepBubbleNode, shapeNode: ShapeNode, textNode: TextNode, imageNode: ImageNode };
 const edgeTypes = { smoothstep: EditableEdge, editable: EditableEdge };
 
 
@@ -126,6 +127,9 @@ const exportToPuml = (nodes, edges) => {
           res += `${indent}component "${node.data.label}" as ${nodeId}\n`;
       } else if (node.type === 'stepBubble') {
           res += `${indent}queue "Step ${node.data.step}" as ${nodeId}\n`;
+      } else if (node.type === 'imageNode') {
+          const label = (node.data?.label || 'Image').replace(/"/g, "'");
+          res += `${indent}artifact "${label}" as ${nodeId}\n`;
       }
       return res;
   };
@@ -220,6 +224,7 @@ const exportToPuml = (nodes, edges) => {
 
 export const DiagramCanvas = ({ allTools, isDarkMode }) => {
     const reactFlowWrapper = useRef(null);
+    const lastPointerRef = useRef(null);
     const { screenToFlowPosition, getNodes, getEdges } = useReactFlow();
     const { x: viewportX, y: viewportY, zoom } = useViewport();
 
@@ -255,6 +260,7 @@ export const DiagramCanvas = ({ allTools, isDarkMode }) => {
             })
         );
     }, [isDarkMode]);
+
     const [mode, setMode] = useState('pointer'); // 'pointer' or 'hand'
 
     // History Stack
@@ -308,6 +314,88 @@ export const DiagramCanvas = ({ allTools, isDarkMode }) => {
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, []);
+
+    const addImageNode = useCallback((file, basePosition) => {
+        if (!file || !file.type || !file.type.startsWith('image/')) return;
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            const src = typeof reader.result === 'string' ? reader.result : '';
+            if (!src) return;
+
+            const preview = new window.Image();
+            preview.onload = () => {
+                const maxWidth = 360;
+                const maxHeight = 260;
+                const minWidth = 120;
+                const minHeight = 90;
+
+                const naturalWidth = preview.naturalWidth || 240;
+                const naturalHeight = preview.naturalHeight || 160;
+                const scale = Math.min(maxWidth / naturalWidth, maxHeight / naturalHeight, 1);
+                const width = Math.max(minWidth, Math.round(naturalWidth * scale));
+                const height = Math.max(minHeight, Math.round(naturalHeight * scale));
+
+                takeSnapshot();
+                setNodes((nds) => {
+                    const existingImages = nds.filter((n) => n.type === 'imageNode').length;
+                    const offset = (existingImages % 8) * 18;
+                    return nds.concat({
+                        id: `image_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+                        type: 'imageNode',
+                        position: { x: basePosition.x + offset, y: basePosition.y + offset },
+                        data: { src, label: file.name || 'Pasted Image' },
+                        style: { width, height },
+                    });
+                });
+            };
+            preview.src = src;
+        };
+        reader.readAsDataURL(file);
+    }, [takeSnapshot]);
+
+    const getCanvasPastePosition = useCallback(() => {
+        const bounds = reactFlowWrapper.current?.getBoundingClientRect();
+        if (!bounds) {
+            return { x: 120, y: 120 };
+        }
+
+        const pointer = lastPointerRef.current;
+        if (
+            pointer &&
+            pointer.x >= bounds.left && pointer.x <= bounds.right &&
+            pointer.y >= bounds.top && pointer.y <= bounds.bottom
+        ) {
+            return screenToFlowPosition({ x: pointer.x, y: pointer.y });
+        }
+
+        return screenToFlowPosition({
+            x: bounds.left + bounds.width / 2,
+            y: bounds.top + bounds.height / 2,
+        });
+    }, [screenToFlowPosition]);
+
+    React.useEffect(() => {
+        const handlePasteImage = (event) => {
+            const activeEl = document.activeElement;
+            const tagName = activeEl?.tagName?.toLowerCase();
+            const isEditingField = tagName === 'input' || tagName === 'textarea' || activeEl?.isContentEditable;
+            if (isEditingField) return;
+
+            const items = Array.from(event.clipboardData?.items || []);
+            const imageItem = items.find((item) => item.type && item.type.startsWith('image/'));
+            if (!imageItem) return;
+
+            const file = imageItem.getAsFile();
+            if (!file) return;
+
+            event.preventDefault();
+            addImageNode(file, getCanvasPastePosition());
+        };
+
+        window.addEventListener('paste', handlePasteImage);
+        return () => window.removeEventListener('paste', handlePasteImage);
+    }, [addImageNode, getCanvasPastePosition]);
 
     // Context Menus
     const [nodeMenu, setNodeMenu] = useState(null); // { id, x, y, type, data }
@@ -489,6 +577,16 @@ export const DiagramCanvas = ({ allTools, isDarkMode }) => {
     const onDrop = useCallback(
         (event) => {
             event.preventDefault();
+
+            const imageFiles = Array.from(event.dataTransfer?.files || []).filter((file) => file.type && file.type.startsWith('image/'));
+            if (imageFiles.length > 0) {
+                const basePosition = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+                imageFiles.forEach((file, index) => {
+                    addImageNode(file, { x: basePosition.x + index * 20, y: basePosition.y + index * 20 });
+                });
+                return;
+            }
+
             const dataStr = event.dataTransfer.getData('application/reactflow');
             if (!dataStr) return;
             const dropData = JSON.parse(dataStr);
@@ -659,7 +757,7 @@ export const DiagramCanvas = ({ allTools, isDarkMode }) => {
                 setNodes((nds) => nds.concat(newNode));
             }
         },
-        [screenToFlowPosition, allTools, getNodes, isDarkMode],
+        [screenToFlowPosition, allTools, getNodes, isDarkMode, addImageNode],
     );
 
     // Standardizes the recursive absolute coordinate fetching logic for Figma-style precision
@@ -746,7 +844,13 @@ export const DiagramCanvas = ({ allTools, isDarkMode }) => {
     }, []);
 
     return (
-        <div className={`diagram-canvas-root flex-1 right-0 h-full relative ${isDarkMode ? 'diagram-canvas-dark' : ''}`} ref={reactFlowWrapper}>
+        <div
+            className={`diagram-canvas-root flex-1 right-0 h-full relative ${isDarkMode ? 'diagram-canvas-dark' : ''}`}
+            ref={reactFlowWrapper}
+            onMouseMove={(event) => {
+                lastPointerRef.current = { x: event.clientX, y: event.clientY };
+            }}
+        >
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -840,6 +944,7 @@ export const DiagramCanvas = ({ allTools, isDarkMode }) => {
                     <li><b>Right-Click</b> any box or line to edit settings.</li>
                     <li>Drag a Group (like VPC) first.</li>
                     <li>Drag Service nodes <b>inside</b> a group.</li>
+                    <li>Paste image with <b>Ctrl+V</b> / <b>Cmd+V</b>.</li>
                     <li>Select and press <b>Backspace</b> to delete.</li>
                 </ul>
             </div>
